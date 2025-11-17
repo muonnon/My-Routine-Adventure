@@ -11,9 +11,6 @@ public class Player implements Serializable { // ⭐ Serializable 인터페이�
     private int currentExp;
     private int maxExp; // 현재 레벨에서 필요한 최대 경험치
     private int gold;
-    
-    //인벤토리 필드 추가 -- 251117
-    private final Inventory inven;
 
     // 생성자: 이름과 초기값을 설정합니다.
     public Player(String name) {
@@ -23,7 +20,6 @@ public class Player implements Serializable { // ⭐ Serializable 인터페이�
         // ⭐ Lv.1의 maxExp는 100으로 설정 (calculateMaxExp 메서드 사용)
         this.maxExp = calculateMaxExp(this.level); 
         this.gold = 0; 
-        this.inven = new Inventory(); //인벤토리 초기화 -- 251117
     }
 
     // =========================================================================
@@ -79,11 +75,6 @@ public class Player implements Serializable { // ⭐ Serializable 인터페이�
     public int getCurrentExp() { return currentExp; }
     public int getMaxExp() { return maxExp; }
     public int getGold() { return gold; }
-
-    // 인벤토리 Getter 추가
-    public Inventory getInventory() {
-    	return inven;
-    }
     
     // Setters (주로 파일 로드 시 사용)
     public void setName(String name) { this.name = name; }
