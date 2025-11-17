@@ -9,7 +9,7 @@ import java.time.LocalDate;
 import java.time.LocalTime; 
 import java.awt.event.WindowAdapter; 
 import java.awt.event.WindowEvent; 
-
+import J1103.InventoryView; //251117
 
 public class MainDashboard extends JFrame {
     
@@ -22,6 +22,7 @@ public class MainDashboard extends JFrame {
     private JProgressBar expBar;
     private JLabel goldLabel;
     private JTextArea logArea; // 새로운 로그 영역
+    private JButton invenButton; //251117
     
     // ⭐ FileManager 객체 (로드 시에만 사용) (2025-11-12)
     private final FileManager fileManager = new FileManager(); 
@@ -122,7 +123,6 @@ public class MainDashboard extends JFrame {
         
         // 상태 정보 패널 (이름, 레벨, 골드)
         JPanel infoPanel = new JPanel(new GridLayout(3, 1)); 
-         
         
         //1. 이름/레벨
         playerNameLabel = new JLabel("이름: " + player.getName() + " (Lv." + player.getLevel() + ")"); // ⭐ 레벨 표시 통합 (2025-11-12)
@@ -135,14 +135,24 @@ public class MainDashboard extends JFrame {
         
         panel.add(infoPanel, BorderLayout.NORTH);
         
-        // 경험치 바
+        //경험치바와 인벤토리 버튼을 담을 컨테이너 - 251117 (센터 배치 후 공간 사용)
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        
+        // 경험치 바 - 센터 패널의 NORTH
         expBar = new JProgressBar(0, player.getMaxExp());
         expBar.setValue(player.getCurrentExp());
         expBar.setStringPainted(true);
         // ⭐ 경험치 바 텍스트 포맷 변경 (11/11)
         expBar.setString(player.getCurrentExp() + " / " + player.getMaxExp() + " EXP");
+        centerPanel.add(expBar, BorderLayout.NORTH);//251117
         
-        panel.add(expBar, BorderLayout.SOUTH);
+        // 인벤토리 버튼 추가 - 센터 패널의 CNETER 251117
+        invenButton = new JButton("인벤토리 보기"); 
+        invenButton.addActionListener(e -> openInventoryView()); 
+        centerPanel.add(invenButton, BorderLayout.CENTER);
+        
+        //메인 패널에 센터패널 추가 251117
+        panel.add(centerPanel, BorderLayout.CENTER); //기존의 남쪽 대신 중앙에 배치했습니다
         
         return panel;
     }
@@ -260,6 +270,11 @@ public class MainDashboard extends JFrame {
         panel.add(listButton);
         
         return panel;
+    }
+    
+    //인벤토리 창을 여는 메소드 251117
+    private void openInventoryView() {
+    	new InventoryView(player);
     }
     
     /**
