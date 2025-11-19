@@ -17,3 +17,7 @@
 /RoutineListView$2.class
 /PlayerStatusUpdater.class
 /InventoryView.class
+/RoutineListView$RoutineRenderer.class
+/RoutineRenderer.class
+/RoutineListView$RoutineCellRenderer.class
+/RoutineListView$RoutineCompletionListener.class
