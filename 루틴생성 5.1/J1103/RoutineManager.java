@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.time.LocalDate;
-import java.util.stream.Collectors; 
+import java.util.stream.Collectors; //251119
 
 
 public class RoutineManager {
@@ -112,15 +112,32 @@ public class RoutineManager {
         return new ArrayList<>(allRoutines.values());
     }
 
-    /**
-     * 루틴 완료를 처리하고 마지막 완료 날짜를 갱신하며 보상을 지급합니다.
-     */
-    public boolean completeRoutine(String id) {
+    //--251119: 특정 요일에 해당하는 루틴 목록을 정렬하여 반환 (미완료 -> 완료 순)
+    public List<Routine> getRoutinesForDay(String day) { 
+        
+        // Stream을 사용하여 필터링 및 정렬된 리스트를 반환 
+        return allRoutines.values().stream() 
+            .filter(routine -> routine.getRepeatDays().contains(day)) 
+            .sorted((r1, r2) -> { 
+                // 1. 오늘 해당 '요일'에 완료된 루틴을 미완료 루틴보다 뒤에 배치 
+                // isCompletedForDay(day)를 사용하여 현재 탭의 요일에 대해서만 완료 여부 판단 
+                int completedCompare = Boolean.compare(r1.isCompletedForDay(day), r2.isCompletedForDay(day));
+                if (completedCompare != 0) {
+                    return completedCompare; 
+                } 
+                // 2. 완료 상태가 같으면 이름 순으로 정렬 
+                return r1.getName().compareTo(r2.getName());
+            }) 
+            .collect(Collectors.toList()); 
+    } 
+
+    //--251119: 루틴 완료를 처리하고 요일별 완료 날짜를 갱신합니다 (day 파라미터 추가)
+    public boolean completeRoutine(String id, String day) { //day 인자 추가
         Routine routine = allRoutines.get(id);
         
-        // 오늘 날짜 확인: 이미 완료했는지 확인
-        if (routine != null && !routine.isCompletedToday()) { 
-            routine.setLastCompletedDate(LocalDate.now());
+        //--251119: isCompletedForDay(day) 사용해 오늘 해당 요일에서 완료했는지 확인
+        if (routine != null && !routine.isCompletedForDay(day)) { 
+        	routine.completeForDay(day); //--251119: Map에 해당 요일의 오늘 날짜 기록
             
             // 보상 값
             final int EXP_REWARD = 20;
@@ -142,6 +159,10 @@ public class RoutineManager {
             } else if (dashboard != null) {
                 dashboard.addLogMessage("시스템 오류: 플레이어 또는 대시보드 연결이 끊어졌습니다. 보상 지급 실패.");
             }
+            
+            //--251119: 완료 상태 변경 시 파일에 자동 저장
+            fileManager.saveRoutinesToFile(getAllRoutines(), ROUTINE_FILE); 
+            
             return true;
         }
         return false; // 이미 완료했거나 루틴이 없음
