@@ -312,12 +312,27 @@ public class MainDashboard extends JFrame {
         if (routines.isEmpty()) {
             todayRoutineListModel.addElement("✅ 오늘 루틴이 없습니다. 휴식을 취하세요!");
         } else {
-            for (Routine routine : routines) {
-                // 완료 여부에 따라 텍스트 포맷팅
-                String status = routine.isCompletedToday() ? "[✔ 완료]" : "[☐ 미완료]";
-                todayRoutineListModel.addElement(status + " " + routine.getName());
+        // 정렬: 미완료 루틴을 위로, 완료된 루틴을 아래로 - 251124
+        routines.sort((r1, r2) -> {
+            // 1. 완료 여부로 먼저 정렬 (false가 true보다 앞에)
+            boolean completed1 = r1.isCompletedForDay(todayDayName);
+            boolean completed2 = r2.isCompletedForDay(todayDayName);
+            
+            int completedCompare = Boolean.compare(completed1, completed2);
+            if (completedCompare != 0) {
+                return completedCompare; // 미완료가 먼저
             }
+            
+            // 2. 완료 상태가 같으면 이름순 정렬
+            return r1.getName().compareTo(r2.getName());
+        });
+        
+        // 정렬된 루틴 목록을 화면에 추가
+        for (Routine routine : routines) {
+            String status = routine.isCompletedForDay(todayDayName) ? "[✔ 완료]" : "[☐ 미완료]";
+            todayRoutineListModel.addElement(status + " " + routine.getName());
         }
+    }
     }
     
     
