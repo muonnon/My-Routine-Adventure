@@ -215,7 +215,8 @@ public class MainDashboard extends JFrame {
         infoPanel.add(playerLevelLabel);
         infoPanel.add(goldLabel);
         
-        panel.add(infoPanel, BorderLayout.NORTH);
+        topContainer.add(infoPanel, BorderLayout.CENTER); // - 25.11.26 - 김민기 : 인포패널을 패널이 아닌 탑컨테이너 중앙에 두도록 재배치
+        panel.add(topContainer, BorderLayout.NORTH);
         
         //경험치바와 인벤토리 버튼을 담을 컨테이너 - 251117 (센터 배치 후 공간 사용)
         JPanel centerPanel = new JPanel(new BorderLayout());
@@ -266,9 +267,9 @@ public class MainDashboard extends JFrame {
         // 25.11.19 - 김민기 : 취약 루틴 라벨 갱신
         String weakness = player.getWeaknessRoutine();
         if (weakness == null) {
-            weaknessLabel.setText("🎯 이번 달 집중 공략: (미설정 - 재접속 필요)");
+            weaknessLabel.setText("이번 달 집중 공략: (미설정 - 재접속 필요)");
         } else {
-            weaknessLabel.setText("🎯 이번 달 집중 공략: [" + weakness + "]");
+            weaknessLabel.setText("이번 달 집중 공략: [" + weakness + "]");
         }
         updateTodayRoutinesUI(); // ⭐ (추가) 루틴 완료 시 목록 갱신 2025.11.17 - 김민기
     }

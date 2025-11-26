@@ -35,9 +35,9 @@ public class RoutineManager {
     // 파일 입출력 상수
     // =========================================================================
     private static final String ROUTINE_FILE = "routines_data.txt";
-    private static final String PLAYER_FILE = "player_data.txt"; // 플레이어 데이터 파일명
+    private static final String PLAYER_FILE = "player_data.dat"; // 플레이어 데이터 파일명
     
-    private static final String BOSS_FILE = "boss_data.txt"; // 25.11.19 - 김민기
+    private static final String BOSS_FILE = "boss_data.txt"; // 25.11.19 - 김민기  ------- 통일 하고 싶으면 해도됨
     
     public RoutineManager() { 
     	// ⭐ 생성자에서 로드 로직 호출
