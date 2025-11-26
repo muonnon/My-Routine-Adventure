@@ -6,8 +6,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.time.LocalDate;
 import java.util.stream.Collectors;
+import java.io.Serializable;
+import java.time.LocalDate;
 
-import J1103.Routine; 
 
 
 public class RoutineManager {
@@ -24,18 +25,27 @@ public class RoutineManager {
     // ⭐ 새로 추가된 필드: Player와 MainDashboard 참조 (11/11)
     private Player player; 
     private MainDashboard dashboard;
-
+    
+    private Boss boss; // 25.11.24 - 김민기
+    
+    //25.11.24 아이템 드랍매니저
+    private final ItemDropManager itemDropManager = new ItemDropManager();
+    
     // =========================================================================
     // 파일 입출력 상수
     // =========================================================================
     private static final String ROUTINE_FILE = "routines_data.txt";
     private static final String PLAYER_FILE = "player_data.txt"; // 플레이어 데이터 파일명
     
+    private static final String BOSS_FILE = "boss_data.txt"; // 25.11.19 - 김민기
     
     public RoutineManager() { 
     	// ⭐ 생성자에서 로드 로직 호출
         loadAllData();
     }
+    
+    // Getter 메서드 25.11.24 - 김민기
+    public Boss getBoss() { return boss; }
 
     // ⭐ Setter 메서드 (MainDashboard에서 초기화 시 호출)
     public void setPlayer(Player player) {
@@ -153,6 +163,7 @@ public class RoutineManager {
      */
     //--251119: 루틴 완료를 처리하고 요일별 완료 날짜를 갱신합니다 (day 파라미터 추가)
     public boolean completeRoutine(String id, String day) { //day 인자 추가
+    	
         Routine routine = allRoutines.get(id);
         
         //--251119: isCompletedForDay(day) 사용해 오늘 해당 요일에서 완료했는지 확인
@@ -160,31 +171,65 @@ public class RoutineManager {
         	routine.completeForDay(day); //--251119: Map에 해당 요일의 오늘 날짜 기록
             
             // 보상 값
-            final int EXP_REWARD = 20;
-            final int GOLD_REWARD = 50;
+        	int expReward = 20;  
+        	int goldReward = 50;
+            int damage = 4 + player.getTotalBonusDamage();
+            double dropRate = 0.02; // 기본 드랍률 2% -----------------  수정가능
+            
+            
+            // 2. 취약 루틴 체크 (보너스 적용)
+            boolean isWeakness = false;
+            if (player.getWeaknessRoutine() != null && player.getWeaknessRoutine().equals(routine.getName())) {
+                isWeakness = true;
+                
+                expReward *= 2;
+                goldReward *= 2;
+                damage *= 2;
+                dropRate = 0.2; // 취약 루틴은 드랍률 20%로 상향!
+            }
+            
             
             if (player != null && dashboard != null) { 
                 
                 // ⭐ [핵심 수정] 레벨업 로직이 포함된 player.gainExp() 호출
-                player.gainExp(EXP_REWARD); 
-                
-                // 골드 획득
-                player.setGold(player.getGold() + GOLD_REWARD);
-                
-                // 스트릭 날짜 업데이트 25.11.19 연속일자용
-                player.getStreakDates().add(LocalDate.now()); 
+                player.gainExp(expReward);  
+                player.setGold(player.getGold() + goldReward); // 골드 획득
+                player.getStreakDates().add(LocalDate.now());  // 스트릭 날짜 업데이트 25.11.19 연속일자용
                 
                 // UI 갱신 및 로그 출력
                 dashboard.updatePlayerStatusUI();
                 dashboard.addLogMessage(
-                    "'" + routine.getName() + "' 루틴 완료! (+" + EXP_REWARD + " EXP, +" + GOLD_REWARD + " G)"
-                );
+                    "'" + routine.getName() + "' 루틴 완료! (+" + expReward + " EXP, +" + goldReward + " G)" ); 
+                
+                Item droppedItem = itemDropManager.dropItem(dropRate); // 설정된 확률로 시도
+                if (droppedItem != null) {
+                    player.getInventory().add(droppedItem); // 인벤토리에 추가
+                    dashboard.addLogMessage("🎁 **[아이템 획득!]** " + droppedItem.getName() + "을(를) 주웠습니다!");
+                    // 효과음 재생 등을 여기에 추가 가능
+                }
+                
+                // B. 보스 자동 공격 로직 25.11.24 - 김민기
+                    if (boss != null && !boss.isDefeated()) {
+                        // 데미지: 기본 4 + 아이템 보너스
+                        boolean isDead = boss.takeDamage(damage);
+                        if (isDead) {
+                            dashboard.showStoryDialog("🎉 토벌 성공!", boss.getHappyStory());
+                            dashboard.addLogMessage("🏆 보스 [" + boss.getName() + "] 처치 완료!");
+                            player.gainGold(500); // 추가 보상
+                        } else {
+                            dashboard.addLogMessage("⚔️ 보스에게 " + damage + "의 피해를 입혔습니다.");
+                        }
+                        dashboard.updateBossUI(); // UI 갱신
+                    }
+                
             } else if (dashboard != null) {
                 dashboard.addLogMessage("시스템 오류: 플레이어 또는 대시보드 연결이 끊어졌습니다. 보상 지급 실패.");
             }
             
-            //--251119: 완료 상태 변경 시 파일에 자동 저장
+            //--251119: 완료 상태 변경 시 파일에 자동 저장 (직렬화 방식 사용 확인!)
             fileManager.saveRoutinesToFile(getAllRoutines(), ROUTINE_FILE); 
+            fileManager.savePlayerState(player, "player_data.dat");
+            if (boss != null) fileManager.saveBossState(boss, BOSS_FILE);
             
             return true;
         }
@@ -228,6 +273,36 @@ public class RoutineManager {
         } else {
              System.out.println("✅ " + allRoutines.size() + "개의 루틴 로드 완료. 다음 Routine ID 카운터: " + (routineCounter + 1));
         }
+        
+        // 25.11.19 - 김민기 : 보스로직 파일 : filemanager에 loadBossState가 없다면 아래처럼 처리.
+        try {
+            this.boss = (Boss) fileManager.loadObject(BOSS_FILE); // loadObject가 있다고 가정
+       } catch (Exception e) {
+            this.boss = null;
+       }
+
+       if (this.boss == null) {
+           this.boss = new Boss();
+       }
+       
+       // [추가] 월이 바뀌었는지 체크
+       checkMonthChange();
+   }
+    
+    // 2025.11.24 - 김민기 : 월 변경 체크
+    private void checkMonthChange() {
+        if (boss.getMonth() != LocalDate.now().getMonthValue()) {
+            // 지난달 보스 처치 실패 시 배드 엔딩
+            if (!boss.isDefeated() && dashboard != null) {
+                 dashboard.showStoryDialog("😢 토벌 실패", boss.getBadStory());
+            }
+            
+            if (player != null) {
+                player.setWeaknessRoutine(null); 
+            }
+            
+            boss.spawnBossForThisMonth(); // 새 보스 소환
+        }
     }
 
     /**
@@ -248,6 +323,10 @@ public class RoutineManager {
             dashboard.addLogMessage("✅ 모든 데이터(루틴, 플레이어) 저장 완료.");
         } else {
             System.out.println("✅ 모든 데이터(루틴, 플레이어) 저장 완료.");
+        }
+        // 25.11.24 - 김민기 : 보스 저장
+        if (boss != null) {
+            fileManager.saveObject(boss, BOSS_FILE); // saveObject 필요
         }
     }
 }

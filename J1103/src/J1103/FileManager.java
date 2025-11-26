@@ -10,9 +10,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import J1103.Routine;
-
 import java.util.Map; //--251119
 import java.util.concurrent.ConcurrentHashMap; //--251119
 import java.util.stream.Collectors;
@@ -26,7 +23,7 @@ public class FileManager {
    private static final String COMPLETION_ENTRY_SEPARATOR = ";"; //--251119
    private static final String COMPLETION_KV_SEPARATOR = ":"; //--251119
    
-   private static final String PLAYER_FILE_NAME = "player_data.txt"; // ⭐ Player 파일 이름 상수 (2025-11-12)
+   private static final String PLAYER_FILE_NAME = "player_data.dat"; // ⭐ Player 파일 이름 상수 (2025-11-12) -- 25.11.24 김민기 : 확장자 변경 txt - > dat
 
    // 루틴 목록을 파일에 저장하는 기능
    public void saveRoutinesToFile(List<Routine> routines, String fileName) {
@@ -37,8 +34,8 @@ public class FileManager {
 
             // 2. 마지막 완료 날짜를 Map을 문자열로 변환 (null이면 "null" 저장) - 251124 수정
             Map<String, LocalDate> completionMap = routine.getLastCompletedDate();
-               String dateString;
                
+            String dateString;
                if (completionMap == null || completionMap.isEmpty()) {
                    dateString = "null";
                } else {
@@ -57,9 +54,8 @@ public class FileManager {
                                  dateString);
 
             writer.println(line);
-            
             // 디버깅용 출력 251124
-               System.out.println("저장: " + line);
+            System.out.println("저장: " + line);
          }
       } catch (IOException e) {
          System.err.println("❌ 루틴 데이터를 파일에 저장하는 중 오류 발생: " + e.getMessage());
@@ -72,7 +68,7 @@ public class FileManager {
       File file = new File(fileName);
 
       if (!file.exists()) {
-         System.out.println("⚠️ 저장된 파일(" + fileName + ")이 없어 새로 시작합니다.");
+         System.out.println("저장된 파일(" + fileName + ")이 없어 새로 시작합니다.");
          return loadedRoutines;
       }
 
@@ -110,7 +106,7 @@ public class FileManager {
                      } 
                   }
                } else {
-                   System.out.println("⚠️ 잘못된 데이터 형식 (필드 부족): " + line); //251124
+                   System.out.println("잘못된 데이터 형식 (필드 부족): " + line); //251124
                }
 
                //--251119: 루틴 객체 생성 및 완료 상태 Map 설정
@@ -121,11 +117,11 @@ public class FileManager {
             }
          }
       } catch (IOException e) {
-         System.err.println("❌ 루틴 데이터를 파일에서 불러오는 중 오류 발생: " + e.getMessage());
+         System.err.println("루틴 데이터를 파일에서 불러오는 중 오류 발생: " + e.getMessage());
       }
       
        // ⭐ 추가: 로드 결과 출력 (디버깅용) 251124
-       System.out.println("✅ " + loadedRoutines.size() + "개의 루틴 로드 완료");
+       System.out.println("Check" + loadedRoutines.size() + "개의 루틴 로드 완료");
        for (Routine r : loadedRoutines) {
            System.out.println("  - " + r.getName() + " : " + r.getLastCompletedDate());
        }
@@ -133,68 +129,62 @@ public class FileManager {
       return loadedRoutines;
    }
    
+   
    /**
-    * ⭐ 플레이어 상태를 파일에 저장합니다. (2025-11-12)
-    * 형식: 이름|레벨|현재경험치|최대경험치|골드
+    * 객체를 파일에 저장 (직렬화) - 25.11.24 - 김민기  : 기존 코드는 이름|래밸|골드| 등과 같은 단순 숫자/문자만 저장하는 방식이다. 하지만 클래스안에 인벤토리 장착장비 등과 같은복잡한 데이터가 추가되었기 때문에 기존의 텍스트 방식으로는 부족하다 판단
     */
+   public void saveObject(Object object, String fileName) {
+       try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName))) {
+           oos.writeObject(object);
+           System.out.println("데이터 저장 완료: " + fileName);
+       } catch (IOException e) {
+           System.err.println("데이터 저장 실패 (" + fileName + "): " + e.getMessage());
+       }
+   }
+
+   /**
+    * 파일에서 객체 불러오기 (역직렬화)
+    */
+   public Object loadObject(String fileName) {
+       File file = new File(fileName);
+       if (!file.exists()) return null;
+
+       try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+           return ois.readObject();
+       } catch (IOException | ClassNotFoundException e) {
+           System.err.println("❌ 데이터 로드 실패 (" + fileName + "): " + e.getMessage());
+           return null;
+       }
+   }
+
+   // =================================================================
+   // [Section 3] 플레이어 데이터 관리 (직렬화 방식으로 변경)
+   // =================================================================
+   
+   // ⚠️ 중요: 텍스트 방식 저장 메서드(savePlayerState)를 직렬화 방식으로 교체합니다.
+   // 아이템, 장비, 스트릭 정보를 텍스트로 파싱하는 것은 너무 복잡하기 때문입니다.
+   
    public void savePlayerState(Player player, String fileName) {
-      try (PrintWriter writer = new PrintWriter(new FileWriter(fileName))) {
-         String line = String.format("%s%s%d%s%d%s%d%s%d",
-                              player.getName(), SEPARATOR, 
-                              player.getLevel(), SEPARATOR, 
-                              player.getCurrentExp(), SEPARATOR, 
-                              player.getMaxExp(), SEPARATOR, 
-                              player.getGold());
-         writer.println(line);
-      } catch (IOException e) {
-         System.err.println("❌ 플레이어 데이터를 파일에 저장하는 중 오류 발생: " + e.getMessage());
-      }
+       saveObject(player, fileName);
    }
    
-   /**
-    * ⭐ 플레이어 상태를 파일에서 불러옵니다. (2025-11-12)
-    * MainDashboard에서 호출 시 파일 이름을 생략하도록 오버로드했습니다.
-    */
    public Player loadPlayerState() {
-      return loadPlayerState(PLAYER_FILE_NAME);
+       return loadPlayerState(PLAYER_FILE_NAME);
    }
    
-   /**
-    * ⭐ 플레이어 상태를 파일에서 불러옵니다. (2025-11-12)
-    * 파일이 없거나 형식이 잘못되면 null을 반환합니다.
-    */
    public Player loadPlayerState(String fileName) {
-      File file = new File(fileName);
+       return (Player) loadObject(fileName);
+   }
 
-      if (!file.exists()) {
-         return null;
-      }
+   // =================================================================
+   // [Section 4] 보스 데이터 관리 (직렬화 방식)
+   // =================================================================
 
-      try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-         String line = reader.readLine();
-         if (line != null) {
-            String[] parts = line.split("\\" + SEPARATOR);
+   public void saveBossState(Boss boss, String fileName) {
+       saveObject(boss, fileName);
+   }
 
-            // 이름, 레벨, 현재Exp, 최대Exp, 골드 (총 5개)
-            if (parts.length == 5) { 
-               String name = parts[0];
-               int level = Integer.parseInt(parts[1]);
-               int currentExp = Integer.parseInt(parts[2]);
-               int maxExp = Integer.parseInt(parts[3]);
-               int gold = Integer.parseInt(parts[4]);
-
-               Player player = new Player(name);
-               player.setLevel(level); // Player.java에 setLevel이 있어야 합니다.
-               player.setCurrentExp(currentExp);
-               player.setMaxExp(maxExp); // Player.java에 setMaxExp가 있어야 합니다.
-               player.setGold(gold);
-
-               return player;
-            }
-         }
-      } catch (IOException | NumberFormatException e) {
-         System.err.println("❌ 플레이어 데이터를 파일에서 불러오는 중 오류 발생. 새 프로필로 시작합니다: " + e.getMessage());
-      }
-      return null;
+   public Boss loadBossState(String fileName) {
+       return (Boss) loadObject(fileName);
    }
 }

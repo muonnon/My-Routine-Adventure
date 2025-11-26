@@ -25,7 +25,7 @@ public class Player implements Serializable { // ⭐ Serializable 인터페이�
     // 25.11.19- 김민기 :  2. 장착 중인 아이템: (슬롯, 아이템) 쌍으로 저장 (예: HEAD -> 철투구)
     private Map<Item.EquipSlot, Item> equippedItems;
     private Set<LocalDate> streakDates; // ⭐ 25.11.19 [추가] 루틴을 완료한 날짜 기록 (연속 달성 현황용) 
-    
+    private String weaknessRoutine; // 25.11.24 -김민기 :  취약루틴
     
     
     // 생성자: 이름과 초기값을 설정합니다.
@@ -40,6 +40,7 @@ public class Player implements Serializable { // ⭐ Serializable 인터페이�
         this.inventory = new ArrayList<>();
         this.equippedItems = new HashMap<>();
         this.streakDates = new HashSet<>();  // 25.11.19 연속일자 체크용
+        this.weaknessRoutine = null; // 처음엔 없음
     }
     
     // =========2025. 11. 19 - 김민기 : ==============================
@@ -183,6 +184,7 @@ public class Player implements Serializable { // ⭐ Serializable 인터페이�
     public List<Item> getInventory() { return inventory; }
     public Map<Item.EquipSlot, Item> getEquippedItems() { return equippedItems; }
     public Set<LocalDate> getStreakDates() { return streakDates; } // 25.11.19 연속일자용
+    public String getWeaknessRoutine() { return weaknessRoutine; } //25.11.24
     
     // Setters (주로 파일 로드 시 사용)
     public void setName(String name) { this.name = name; }
@@ -208,5 +210,9 @@ public class Player implements Serializable { // ⭐ Serializable 인터페이�
      */
     public void gainGold(int gold) {
         this.gold += gold;
+    }
+    
+    public void setWeaknessRoutine(String weaknessRoutine) { 
+        this.weaknessRoutine = weaknessRoutine; 
     }
 }
