@@ -5,7 +5,7 @@
 🎮 텍스트 RPG 루틴 관리 프로그램
 
 일상 루틴을 게임처럼 즐겁게! RPG 요소를 접목한 루틴 관리 시스템
-<br/>
+<br />
 
 📌 프로젝트 주제 및 목적
 
@@ -30,7 +30,7 @@
 아이템 & 인벤토리: 골드로 아이템 구매 및 캐릭터 강화
 
 연속 달성 현황: 달력 형태로 루틴 완료 기록 확인
-<br/>
+<br />
 
 💻 시스템 요구사항
 
@@ -39,7 +39,7 @@ Java: JDK 8 이상
 운영체제: Windows, macOS, Linux (Java 지원 OS)
 
 IDE: Eclipse, IntelliJ IDEA 권장 (선택사항)
-<br/>
+<br />
    
 🚀 설치 및 실행 방법
 1. 저장소 클론
@@ -55,7 +55,7 @@ Eclipse 실행
 File → Import... → General → Existing Projects into Workspace
 
 클론한 프로젝트 폴더 선택 → Finish
-<br/>
+<br />
 
 방법 B: 직접 실행
 
@@ -72,7 +72,7 @@ File → Open → 프로젝트 폴더 선택
 src/J1103/MainDashboard.java 파일 열기
 
 Run 버튼 클릭 또는 Shift + F10
-<br/>
+<br />
 
 🎮 사용 방법
 1. 루틴 생성
@@ -104,7 +104,7 @@ Run 버튼 클릭 또는 Shift + F10
 메인 화면 상단 탭에서 🔥 연속 달성 현황 선택
 
 달력에서 완료한 날짜 확인 (초록색 표시)
-<br/>
+<br />
 
 🛠️ 주요 기능
 
@@ -131,7 +131,7 @@ Run 버튼 클릭 또는 Shift + F10
 장비 장착/해제
 
 보스 공격력 증가 또는 경험치 보너스
-<br/>
+<br />
 
 📊 통계
 
@@ -140,14 +140,14 @@ Run 버튼 클릭 또는 Shift + F10
 완료/미완료 상태 표시
 
 연속 달성 일수 달력
-<br/>
+<br />
 
 💾 데이터 저장
 
 프로그램 종료 시 자동 저장
 
 프로그램 시작 시 자동 불러오기
-<br/>
+<br />
 
 📧 문의처
 
@@ -157,7 +157,7 @@ Run 버튼 클릭 또는 Shift + F10
 - alsrl2232@naver.com 
 - tkfkdalfl0612@gmail.com
 - pgwoo092@gmail.com
-<br/>
+<br />
 
 📝 라이선스
 
