@@ -12,6 +12,8 @@ public class Boss implements Serializable {
     private int maxHp;
     private int currentHp;
     private boolean isDefeated; // 처치 여부
+    private String imagePath; // 25.11.30 김민기 : 보스 이미지 파일 경로 저장
+    private String hitImagePath;
 
     public Boss() {
         // 생성 시 현재 월에 맞는 보스 소환
@@ -39,21 +41,80 @@ public class Boss implements Serializable {
      * ⭐ [개발자 영역] 월별 보스 컨셉과 스토리를 설정하는 곳입니다.
      * 여기에 원하시는 텍스트를 채워 넣으세요.
      */
-    private void setMonthlyConcept(int month) {
+    private void setMonthlyConcept(int month) {  // ------------------------------------------------------- 1~12월까지 채우면됨 이후 default 삭제 : 현재는 그리할 이유가 없으므로 12,1,2 까지 진행
         switch (month) {
             case 1:
-                this.name = "나태의 눈사람 (1월)";
-                this.desc = "새해의 결심을 얼려버리려는 차가운 눈사람입니다.";
+                this.name = "희망찬 겨울 (1월)";
+                this.desc = "새해의 결심을 희망하는 겨울입니다.";
+//                this.imagePath = "images/SnowBoss.png"; // 1월 보스 이미지...
+//                this.hitImagePath = "images/SnowBoss_Hit.png";
                 break;
             case 2:
                 this.name = "졸음의 초콜릿 몬스터 (2월)";
                 this.desc = "달콤한 잠으로 유혹하는 몬스터입니다.";
+//                this.imagePath = "images/boss_1.png" // 2월 보스 이미지...
+//                this.hitImagePath = "images/Boss2_Hit.png";
                 break;
             // ... 3월 ~ 12월까지 case 추가 ...
-            default:
-                this.name = "일상의 권태 (일반)";
-                this.desc = "매일 반복되는 지루함이 형상화된 몬스터입니다.";
+            case 3:
+                this.name = "몬스터 (3월)";
+                this.desc = "몬스터입니다.";
+//              this.imagePath = "images/boss_1.png" // 3월 보스 이미지....
+//              this.hitImagePath = "images/Boss3_Hit.png";
                 break;
+            case 4:
+                this.name = "몬스터 (4월)";
+                this.desc = "몬스터입니다.";
+//              this.imagePath = "images/boss_1.png" // 3월 보스 이미지....
+//              this.hitImagePath = "images/Boss3_Hit.png";
+                break;
+            case 5:
+                this.name = "몬스터 (5월)";
+                this.desc = "몬스터입니다.";
+//              this.imagePath = "images/boss_1.png" // 3월 보스 이미지....
+//              this.hitImagePath = "images/Boss3_Hit.png";
+                break;
+            case 6:
+                this.name = "몬스터 (6월)";
+                this.desc = "몬스터입니다.";
+//              this.imagePath = "images/boss_1.png" // 3월 보스 이미지....
+//              this.hitImagePath = "images/Boss3_Hit.png";
+                break;
+            case 7:
+                this.name = "몬스터 (7월)";
+                this.desc = "몬스터입니다.";
+//              this.imagePath = "images/boss_1.png" // 3월 보스 이미지....
+//              this.hitImagePath = "images/Boss3_Hit.png";
+                break;
+            case 8:
+                this.name = "몬스터 (8월)";
+                this.desc = "몬스터입니다.";
+//              this.imagePath = "images/boss_1.png" // 3월 보스 이미지....
+//              this.hitImagePath = "images/Boss3_Hit.png";
+                break;
+            case 9:
+                this.name = "몬스터 (9월)";
+                this.desc = "몬스터입니다.";
+//              this.imagePath = "images/boss_1.png" // 3월 보스 이미지....
+//              this.hitImagePath = "images/Boss3_Hit.png";
+                break;
+            case 10:
+                this.name = "몬스터 (10월)";
+                this.desc = "몬스터입니다.";
+//              this.imagePath = "images/boss_1.png" // 3월 보스 이미지....
+//              this.hitImagePath = "images/Boss3_Hit.png";
+                break;
+            case 11:
+                this.name = "몬스터 (11월)";
+                this.desc = "몬스터입니다.";
+//              this.imagePath = "images/boss_1.png" // 3월 보스 이미지....
+//              this.hitImagePath = "images/Boss3_Hit.png";
+                break;
+            case 12:
+                this.name = "나태의 눈사람 (12월)";
+                this.desc = "새해의 결심을 얼려버리려는 차가운 눈사람입니다.";
+                this.imagePath = "images/SnowBoss.png"; // 1월 보스 이미지...
+                this.hitImagePath = "images/SnowBoss_Hit.png";
         }
     }
 
@@ -106,4 +167,6 @@ public class Boss implements Serializable {
     public int getCurrentHp() { return currentHp; }
     public int getMonth() { return month; }
     public boolean isDefeated() { return isDefeated; }
+    public String getImagePath() { return imagePath; } // 25.11.30 김민기 : 이미지 경로
+    public String getHitImagePath() { return hitImagePath; } // 25.11.30 김민기 : 공격받은 모션
 }
