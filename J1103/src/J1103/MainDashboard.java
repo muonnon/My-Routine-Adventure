@@ -17,7 +17,7 @@ import java.util.Locale;
 import java.util.List;
 import javax.swing.DefaultListModel;
 import java.util.stream.Collectors;
-
+import javax.swing.Timer; // 25.11.30 김민기 : 보스 아플때 쓰는용 
 
 
 public class MainDashboard extends JFrame {
@@ -43,7 +43,7 @@ public class MainDashboard extends JFrame {
     private JProgressBar bossHpBar; // 필드로 승격
     private JLabel bossNameLabel;   // 필드로 승격
     private JTextArea bossDescArea; // 설명 표시용
-    
+    private JLabel bossImageLabel; // 25.11.30 김민기 : 보스 이미지를 표시할 라벨 필드
     private JLabel weaknessLabel; // 25.11.19 - 취약루틴
     
     
@@ -63,9 +63,23 @@ public class MainDashboard extends JFrame {
             startLogMessage = "프로그램 시작. (이전 데이터 로드)";
         } else {
             // NameSettingDialog 없이 기본값으로 Player 생성
-            this.player = new Player("루틴 수행자"); 
-            startLogMessage = "프로그램 시작. (새 프로필 생성: " + this.player.getName() + ")";
-        } 
+        	String inputName = JOptionPane.showInputDialog(null, 
+                    "환영합니다! 루틴의 세계에 오신 것을 환영합니다.\n당신의 이름을 알려주세요:", 
+                    "캐릭터 생성", 
+                    JOptionPane.QUESTION_MESSAGE);
+        	// 유효성 검사: 취소(null)하거나 빈칸으로 넣으면 기본값 사용
+            String finalName;
+            if (inputName == null || inputName.trim().isEmpty()) {
+                finalName = "루틴 수행자"; // 기본값
+            } else {
+                finalName = inputName.trim();
+            }
+
+            // 입력받은 이름으로 플레이어 생성
+            this.player = new Player(finalName); 
+            startLogMessage = "프로그램 시작. (새 프로필 생성: " + finalName + ")";
+        }
+        
         
         // ⭐ Manager와 Player/Dashboard 연결 설정 (11/11)
         this.manager.setPlayer(this.player); 
@@ -182,9 +196,17 @@ public class MainDashboard extends JFrame {
         // StreakWindow에서 만든 패널을 가져와서 탭에 추가
         tabbedPane.addTab("🔥 연속 달성 현황", streakWindow.getUI());
 
+        StatisticsPanel statsPanel = new StatisticsPanel(manager); // 통계 패널 생성
+        tabbedPane.addTab("월간 통계", statsPanel);  // 탭 패널에 추가
+        
+        // 탭을 클릭할 때마다 최신화하는 기능
+        tabbedPane.addChangeListener(e -> {
+            if (tabbedPane.getSelectedComponent() == statsPanel) {
+                statsPanel.updateStatistics(); 
+            }
+        });
         // 탭 패널을 프레임에 추가
         add(tabbedPane, BorderLayout.CENTER);
-        
         // 툴바 추가 (루틴 관리 메뉴 제거됨)
         setJMenuBar(createMenuBar());
     }
@@ -288,8 +310,8 @@ public class MainDashboard extends JFrame {
         
         // 중앙: 이미지(텍스트) + 설명
         JPanel centerPanel = new JPanel(new BorderLayout());
-        JLabel bossImageLabel = new JLabel("👹", JLabel.CENTER);
-        bossImageLabel.setFont(new Font("Serif", Font.BOLD, 50));
+        // ⭐ [수정] 이미지 라벨 초기화 (처음엔 빈 상태로 생성)
+        bossImageLabel = new JLabel("", JLabel.CENTER);
         centerPanel.add(bossImageLabel, BorderLayout.CENTER);
         
         // 설명 영역
@@ -311,6 +333,8 @@ public class MainDashboard extends JFrame {
         
         panel.add(bossHpBar, BorderLayout.SOUTH);
         
+        updateBossUI(); // 25.11.30 김민기 : 초기 이미지 로드를 위한 호출
+        
         return panel;
     }
     
@@ -321,6 +345,13 @@ public class MainDashboard extends JFrame {
         
         bossNameLabel.setText(boss.getName());
         bossDescArea.setText(boss.getDesc());
+    
+        // 헬퍼 메서드로 이미지 로드 (코드가 깔끔해짐) 
+        bossImageLabel.setIcon(loadImageIcon(boss.getImagePath())); // 25.11.30 김민기 : 보스피격
+        
+        // ... (체력바 갱신 코드 유지) ...
+        bossHpBar.setValue(boss.getCurrentHp());
+        bossHpBar.setString("HP: " + boss.getCurrentHp() + " / " + boss.getMaxHp());
         
         bossHpBar.setMaximum(boss.getMaxHp());
         bossHpBar.setValue(boss.getCurrentHp());
@@ -332,7 +363,41 @@ public class MainDashboard extends JFrame {
             bossHpBar.setString("HP: " + boss.getCurrentHp() + " / " + boss.getMaxHp());
             bossHpBar.setForeground(Color.RED);
         }
+        
+        
     }
+    // 루틴 목록창에서 눌러야 작용하는것인데 메인대쉬보드로 설정함
+// //  25.11.30 김민기 :  보스 피격 효과 메서드 (깜빡임 기능)
+//    public void showBossHitEffect() {
+//        Boss boss = manager.getBoss();
+//        if (boss == null || boss.isDefeated()) return;
+//
+//        // 피격 이미지로 즉시 변경
+//        bossImageLabel.setIcon(loadImageIcon(boss.getHitImagePath()));
+//
+//        // 5초(5000ms) 뒤에 원래 이미지로 복구하는 타이머 실행
+//        Timer timer = new Timer(5000, e -> {
+//            updateBossUI(); // 원래대로 복구 (updateBossUI는 기본 이미지를 불러오니까)
+//        });
+//        
+//        timer.setRepeats(false); // 한 번만 실행
+//        timer.start();
+//    }
+//
+    // 25.11.30 김민기 :  이미지 로드 및 리사이징 헬퍼 메서드 (중복 제거용)
+    private ImageIcon loadImageIcon(String path) {
+        if (path == null) return null;
+        
+        ImageIcon icon = new ImageIcon(path);
+        if (icon.getIconWidth() > 0) {
+            Image img = icon.getImage();
+            // 200x200 크기로 조절 (필요에 따라 숫자 변경)
+            Image scaledImg = img.getScaledInstance(350, 350, Image.SCALE_SMOOTH); 
+            return new ImageIcon(scaledImg);
+        }
+        return null; // 이미지 로드 실패 시
+    }
+
 
     // 25.11.19 - 김민기 : 스토리 팝업창 띄우기
     public void showStoryDialog(String title, String content) {

@@ -28,6 +28,7 @@ public class RoutineManager {
     
     private Boss boss; // 25.11.24 - 김민기
     
+    public Player getPlayer() { return player; }// Player 객체를 꺼내쓰기 위해 12.01
     //25.11.24 아이템 드랍매니저
     private final ItemDropManager itemDropManager = new ItemDropManager();
     
@@ -50,6 +51,12 @@ public class RoutineManager {
     // ⭐ Setter 메서드 (MainDashboard에서 초기화 시 호출)
     public void setPlayer(Player player) {
         this.player = player;
+        // 플레이어가 설정된 직후에 월 변경 체크
+        // 이제 player가 null이 아니므로 정상적으로 취약 루틴을 지울 수 있음
+        if (this.boss != null) {
+            checkMonthChange();
+       }
+        
     }
     
     public void setDashboard(MainDashboard dashboard) {
@@ -174,7 +181,7 @@ public class RoutineManager {
         	int expReward = 20;  
         	int goldReward = 50;
             int damage = 4 + player.getTotalBonusDamage();
-            double dropRate = 0.02; // 기본 드랍률 2% -----------------  수정가능
+            double dropRate = 0.02; // 기본 드랍률 2% ----------------------------------------------------------------------------------------------------  수정가능
             
             
             // 2. 취약 루틴 체크 (보너스 적용)
@@ -217,6 +224,7 @@ public class RoutineManager {
                             dashboard.addLogMessage("🏆 보스 [" + boss.getName() + "] 처치 완료!");
                             player.gainGold(500); // 추가 보상
                         } else {
+//                        	dashboard.showBossHitEffect();
                             dashboard.addLogMessage("⚔️ 보스에게 " + damage + "의 피해를 입혔습니다.");
                         }
                         dashboard.updateBossUI(); // UI 갱신
@@ -285,8 +293,6 @@ public class RoutineManager {
            this.boss = new Boss();
        }
        
-       // [추가] 월이 바뀌었는지 체크
-       checkMonthChange();
    }
     
     // 2025.11.24 - 김민기 : 월 변경 체크
