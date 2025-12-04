@@ -4,10 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.time.LocalDate;
-import java.util.stream.Collectors;
-
-import J1103.Routine; 
+import java.util.stream.Collectors; 
 
 
 public class RoutineManager {
@@ -24,6 +21,7 @@ public class RoutineManager {
     // ⭐ 새로 추가된 필드: Player와 MainDashboard 참조 (11/11)
     private Player player; 
     private MainDashboard dashboard;
+    private Boss boss; // ⭐ Boss 필드 추가 (12/05)
     
     // 아이템 드랍 관리자 인스턴스
     private final ItemDropManager itemDropManager = new ItemDropManager(); // 수정(11/21) 아이템 드랍 관리자 인스턴스 생성
@@ -48,6 +46,11 @@ public class RoutineManager {
     // ⭐ Setter 메서드 (MainDashboard에서 초기화 시 호출)
     public void setDashboard(MainDashboard dashboard) {
         this.dashboard = dashboard;
+    }
+    
+    // ⭐ Setter 메서드 - Boss 연결 (12/05)
+    public void setBoss(Boss boss) {
+        this.boss = boss;
     }
 
     // =========================================================================
@@ -107,6 +110,7 @@ public class RoutineManager {
 
     /**
      * 루틴을 완료(체크) 처리하고 아이템 드랍을 시도합니다.
+     * ⭐ 보스에게 데미지를 주는 기능 추가 (12/05)
      * @param routineId 완료 처리할 루틴의 ID
      * @param day 완료 처리하는 요일 ("월", "화" 등)
      * @return 완료 처리에 성공했으면 true, 이미 완료했거나 루틴이 없으면 false
@@ -127,34 +131,47 @@ public class RoutineManager {
         
         // 2. 플레이어 경험치, 골드 증가 및 스트릭 업데이트
         if (player != null) {
-            player.gainExpAndGold(10, 5); // 수정(11/21) Player의 새로운 메서드 호출
-            player.updateStreak(LocalDate.now()); // 수정(11/21) Player의 새로운 메서드 호출
+            player.gainExpAndGold(10, 5);
+            player.updateStreak(DateUtil.getToday());
             
             // 3. 아이템 드랍 시도
-            double dropRate = 0.2; // 예시로 20% 드랍 확률 설정
+            double dropRate = 0.2; // 20% 드랍 확률
             Item droppedItem = itemDropManager.dropItem(dropRate); 
             
             // 4. 드랍 성공 시 인벤토리에 추가 및 로그 표시
             if (droppedItem != null) { 
-                player.getInventory().addItem(droppedItem); // 수정(11/21) Inventory 객체의 addItem 호출
+                player.getInventory().addItem(droppedItem);
                 
                 if (dashboard != null) {
                     dashboard.addLogMessage("🎉 **아이템 획득!** " + droppedItem.getName() + "이(가) 인벤토리에 추가되었습니다.");
-                    // MainDashboard의 UI 갱신 필요 (골드/경험치/인벤토리 상태)
-                    dashboard.updatePlayerStatusUI(); 
-                } else {
-                    System.out.println("🎉 **아이템 획득!** " + droppedItem.getName() + "이(가) 인벤토리에 추가되었습니다.");
                 }
-            } 
+            }
+        }
+        
+        // ⭐ 5. 보스에게 데미지 주기 (12/05)
+        if (boss != null && !boss.isDefeated()) {
+            // 기본 데미지 + 장비 보너스 데미지
+            int baseDamage = 4; // 루틴 1개당 기본 4 데미지 (31일 * 1개 = 124 > 100HP)
+            int bonusDamage = (player != null) ? player.getTotalBonusDamage() : 0;
+            int totalDamage = baseDamage + bonusDamage;
             
-            // 플레이어 상태 UI 갱신 (경험치/골드)
+            boolean isDefeated = boss.takeDamage(totalDamage);
+            
             if (dashboard != null) {
-                 dashboard.updatePlayerStatusUI();
+                dashboard.addLogMessage(String.format("⚔️ 보스 공격! %d 데미지 (기본 %d + 보너스 %d)", 
+                    totalDamage, baseDamage, bonusDamage));
+                dashboard.showBossHitAnimation(); // ⭐ 히트 애니메이션 표시 (12/05)
+                dashboard.updateBossUI(); // ⭐ 보스 UI 갱신 호출
+                
+                if (isDefeated) {
+                    dashboard.addLogMessage("🎊 **보스 처치 성공!** " + boss.getHappyStory());
+                }
             }
         }
         
         if (dashboard != null) {
             dashboard.addLogMessage("✅ 루틴 완료: " + routine.getName());
+            dashboard.updatePlayerStatusUI();
         }
         
         // 파일에 저장
@@ -237,6 +254,11 @@ public class RoutineManager {
         // player 객체가 null이 아닐 때만 저장 시도
         if (player != null) {
             fileManager.savePlayerState(player, PLAYER_FILE);
+        }
+        
+        // 3. ⭐ 보스 데이터 저장 (2025-12-05)
+        if (boss != null) {
+            fileManager.saveBossState(boss, "boss_data.txt");
         }
     }
 }

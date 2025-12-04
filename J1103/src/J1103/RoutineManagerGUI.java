@@ -124,8 +124,11 @@ public class RoutineManagerGUI extends JFrame {
         // ⭐ 새로 추가된 '목록 보기' 버튼
         JButton listButton = new JButton("루틴 목록 보기");
         listButton.addActionListener(e -> {
-            // RoutineManager 객체를 전달하여 새 목록 창 생성
-            new RoutineListView(manager); 
+            // 현재 창(루틴 생성 팝업)을 닫고 루틴 목록 창 열기
+            dispose(); // ⭐ 현재 창 닫기
+            RoutineListView listView = new RoutineListView(manager);
+            listView.setVisible(true);
+            listView.loadAllRoutines(); // 루틴 데이터 로드
         });
         
         buttonPanel.add(listButton);

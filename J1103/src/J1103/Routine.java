@@ -40,19 +40,19 @@ public class Routine {
 	// --251119: 특정 요일에 대해 오늘 완료되었는지 확인하는 메서드 추가
 	public boolean isCompletedForDay(String day) {
 		LocalDate lastDate = lastCompletedDate.get(day);
-		return lastDate != null && lastDate.equals(LocalDate.now());
+		return lastDate != null && lastDate.equals(DateUtil.getToday());
 	}
 	
 	// --251119: 특정 요일의 완료 날짜를 오늘로 갱신하는 메서드 추가
 	public void completeForDay(String day) {
-		lastCompletedDate.put(day, LocalDate.now());
+		lastCompletedDate.put(day, DateUtil.getToday());
 	}
     
     // ⭐ 오늘 완료했는지 확인하는 헬퍼 메서드 -- 오늘 날짜로 기록됨. / ex : 월요일 탭에서 생성한 a루틴을 체크 -> 체크된 a루틴의 객체가 오늘로 기록됨 -> 화요일 탭 이동하여 생성된 a루틴 확인 -> 
     // isCompletedToday()는 루틴의 lastCompletedDate가 오늘 날짜와 같으므로 **true**를 반환 -> 클릭 불가
     // 데이터 저장 클래스와 연동 할때 지금 이가 잘 되는지 판단할 것임
     public boolean isCompletedToday() {
-        return lastCompletedDate != null && lastCompletedDate.equals(LocalDate.now());
+        return lastCompletedDate != null && lastCompletedDate.equals(DateUtil.getToday());
     }
     
     // Getter 메서드

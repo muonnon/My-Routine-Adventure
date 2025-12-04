@@ -131,7 +131,7 @@ public class StreakWindow {
             }
             
             // 오늘 날짜 표시 (강조)
-            if (date.equals(LocalDate.now())) {
+            if (date.equals(DateUtil.getToday())) {
                  dayLabel.setBorder(BorderFactory.createLineBorder(Color.ORANGE, 3));
             }
             

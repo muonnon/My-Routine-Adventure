@@ -1,30 +1,29 @@
 package J1103;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
-
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap; // ⭐ 이 줄을 추가해야 합니다.
-import java.awt.event.MouseAdapter; // -- 2025-11-05
-import java.awt.event.MouseEvent;  // -- 2025-11-05
-import java.time.DayOfWeek;
-import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.ArrayList;
 
-import javax.swing.event.TableModelEvent; // --2025-11-10
-import javax.swing.event.TableModelListener; // TableModelListener도 같이 필요합니다
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 
 public class RoutineListView extends JFrame {
 
     private final RoutineManager manager;
     private final String[] DAYS = {"월", "화", "수", "목", "금", "토", "일"};
-    private final String[] TABLE_HEADERS = {"완료", "루틴 이름", "태그", "Routine ID"}; // Routine ID는 사용자에게 보여주지 않는다.
+    private final String[] TABLE_HEADERS = {"완료", "루틴 이름", "태그", "Routine ID"};
     
     // 요일별 테이블 모델을 저장하여 데이터를 쉽게 업데이트합니다.
-    private Map<String, DefaultTableModel> dayTableModels = new HashMap<>(); 
+    private Map<String, DefaultTableModel> dayTableModels = new HashMap<>();
+    // ⭐ 요일별 테이블 참조 저장 (과거/미래 요일 클릭 제어용)
+    private Map<String, JTable> dayTables = new HashMap<>(); 
 
     public RoutineListView(RoutineManager manager) {
         this.manager = manager;
@@ -45,26 +44,35 @@ public class RoutineListView extends JFrame {
      */
     private JTabbedPane initTabbedPane() {
         JTabbedPane tabbedPane = new JTabbedPane();
+        String todayDay = DateUtil.getTodayKoreanDay();
         
         for (String day : DAYS) {
+            final boolean isToday = day.equals(todayDay); // ⭐ 오늘인지 확인
+            
             // 테이블 모델 생성
             DefaultTableModel model = new DefaultTableModel(TABLE_HEADERS, 0) {
-                // 체크박스 컬럼(0번)을 Boolean 타입으로 설정하여 체크박스로 렌더링되게 합니다.
                 @Override
                 public Class<?> getColumnClass(int columnIndex) {
                     if (columnIndex == 0) return Boolean.class;
-                    // Routine ID 컬럼(3번)은 숨기므로 String 타입으로 둡니다.
                     return String.class; 
                 }
-                // Routine ID 컬럼(3번)을 제외한 나머지 컬럼은 편집 가능하도록 설정
                 @Override
                 public boolean isCellEditable(int row, int column) {
-                    return column == 0; // 완료(체크박스) 컬럼만 편집 가능
+                    // ⭐ 오늘 요일만 체크박스 편집 가능, 과거/미래 요일은 클릭 불가
+                    if (!isToday) return false;
+                    
+                    // 완료된 루틴은 편집 불가
+                    if (column == 0) {
+                        Boolean isCompleted = (Boolean) getValueAt(row, 0);
+                        return isCompleted == null || !isCompleted;
+                    }
+                    return false;
                 }
             };
             dayTableModels.put(day, model);
             
             JTable table = new JTable(model);
+            dayTables.put(day, table); // ⭐ 테이블 참조 저장
             
             // 1. Routine ID 컬럼 숨기기 (사용자에게는 보이지 않게)
             table.getColumnModel().getColumn(3).setMinWidth(0);
@@ -76,13 +84,32 @@ public class RoutineListView extends JFrame {
             table.getColumnModel().getColumn(1).setPreferredWidth(200); // 루틴 이름
             table.getColumnModel().getColumn(2).setPreferredWidth(100); // 태그
             
-            // 3. 렌더러 설정
-            // Custom Renderer는 RoutineManager가 필요함.
+            // 3. 렌더러 설정 (⭐ 오늘 요일 여부 전달)
             RoutineRenderer renderer = new RoutineRenderer(); 
+            renderer.setIsToday(isToday); // ⭐ 오늘 요일인지 설정
             table.setDefaultRenderer(Boolean.class, renderer);
             table.setDefaultRenderer(String.class, renderer);
             
-            // 4. 우클릭 팝업 리스너 추가
+            // 4. ⭐ 과거/미래 요일 클릭 시 팝업 표시
+            if (!isToday) {
+                table.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        int column = table.columnAtPoint(e.getPoint());
+                        // 체크박스 컬럼(0번)을 클릭했을 때만 팝업 표시
+                        if (column == 0) {
+                            JOptionPane.showMessageDialog(
+                                RoutineListView.this,
+                                "과거/미래 루틴은 체크할 수 없습니다.",
+                                "알림",
+                                JOptionPane.INFORMATION_MESSAGE
+                            );
+                        }
+                    }
+                });
+            }
+            
+            // 5. 우클릭 팝업 리스너 추가
             table.addMouseListener(new PopupListener(table, manager, this));
 
             tabbedPane.addTab(day, new JScrollPane(table));
@@ -138,10 +165,11 @@ public class RoutineListView extends JFrame {
     /**
      * 모든 요일의 테이블 데이터를 갱신합니다.
      * RoutineModify, RoutineManagerGUI, Checkbox 클릭 등 여러 곳에서 호출됩니다.
+     * ⭐ 완료된 루틴은 아래로 정렬됩니다.
      */
     public void loadAllRoutines() {
         // 현재 요일을 구하는 헬퍼 메서드 (DayOfWeek를 한글 요일로 변환)
-        String todayDay = getKoreanDayOfWeek(LocalDate.now().getDayOfWeek());
+        String todayDay = DateUtil.getTodayKoreanDay();
         
         for (String day : DAYS) {
             DefaultTableModel model = dayTableModels.get(day);
@@ -149,11 +177,19 @@ public class RoutineListView extends JFrame {
             model.setRowCount(0); 
 
             // 2. RoutineManager로부터 해당 요일의 루틴 목록을 가져옵니다.
-            // ⭐ 오류 수정: 메서드 이름을 getRoutinesByDay로 변경
-            List<Routine> routines = manager.getRoutinesByDay(day); // 수정(11/21) 메서드 이름 통일: getRoutinesForDay -> getRoutinesByDay
+            List<Routine> routines = manager.getRoutinesByDay(day);
 
-            // 3. 테이블에 데이터 추가
-            for (Routine routine : routines) {
+            // ⭐ 3. 완료되지 않은 루틴을 먼저, 완료된 루틴을 나중에 정렬
+            List<Routine> sortedRoutines = new ArrayList<>(routines);
+            sortedRoutines.sort((r1, r2) -> {
+                boolean c1 = r1.isCompletedForDay(day);
+                boolean c2 = r2.isCompletedForDay(day);
+                // 미완료(false)가 먼저, 완료(true)가 나중에
+                return Boolean.compare(c1, c2);
+            });
+
+            // 4. 테이블에 데이터 추가 (정렬된 순서로)
+            for (Routine routine : sortedRoutines) {
                 // 해당 요일에 오늘 완료했는지 확인
                 boolean isCompleted = routine.isCompletedForDay(day); 
                 
@@ -169,18 +205,11 @@ public class RoutineListView extends JFrame {
             }
         }
         
-        // ⭐ 오늘의 요일 탭으로 강제 이동 (선택적)
+        // ⭐ 오늘의 요일 탭으로 강제 이동
         JTabbedPane tabbedPane = (JTabbedPane) getContentPane().getComponent(0);
         int todayIndex = java.util.Arrays.asList(DAYS).indexOf(todayDay);
         if (todayIndex >= 0) {
             tabbedPane.setSelectedIndex(todayIndex);
         }
-    }
-    
-    /**
-     * java.time.DayOfWeek를 한글 요일 문자열로 변환합니다.
-     */
-    private String getKoreanDayOfWeek(DayOfWeek dayOfWeek) {
-        return dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.KOREAN);
     }
 }

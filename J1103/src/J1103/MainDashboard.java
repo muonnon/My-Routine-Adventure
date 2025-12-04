@@ -5,15 +5,11 @@ package J1103;
 import javax.swing.*;
 
 import java.awt.*;
-import java.time.LocalDate;
 // ⭐ LocalTime import 추가 (로그 시간 표시용) (11/11)
 import java.time.LocalTime; 
 import java.awt.event.WindowAdapter; 
 import java.awt.event.WindowEvent;
 // 2025.11.17
-import java.time.DayOfWeek;
-import java.time.format.TextStyle;
-import java.util.Locale;
 import java.util.List;
 import javax.swing.DefaultListModel;
 import java.util.stream.Collectors;
@@ -23,6 +19,7 @@ public class MainDashboard extends JFrame {
     
     private RoutineManager manager;
     private Player player; // ⭐ Player 필드 추가
+    private Boss boss; // ⭐ Boss 필드 추가 (12/05)
 
     // UI 컴포넌트
     private JLabel playerNameLabel;
@@ -34,6 +31,11 @@ public class MainDashboard extends JFrame {
     // ⭐ 오늘의 루틴 목록 UI 필드 추가 - 25.11.17
     private DefaultListModel<String> todayRoutineListModel;
     private JList<String> todayRoutineList;
+    
+    // ⭐ 보스 관련 UI 필드 추가 (12/05)
+    private JProgressBar bossHpBar;
+    private JLabel bossNameLabel;
+    private JLabel bossImageLabel;
     
     // ⭐ FileManager 객체 (로드 시에만 사용) (2025-11-12)
     private final FileManager fileManager = new FileManager(); 
@@ -58,9 +60,13 @@ public class MainDashboard extends JFrame {
             startLogMessage = "프로그램 시작. (새 프로필 생성: " + this.player.getName() + ")";
         } 
         
-        // ⭐ Manager와 Player/Dashboard 연결 설정 (11/11)
+        // ⭐ Boss 로드 또는 생성 (12/05) - 파일에서 로드하고, 월이 다르면 새 보스 생성
+        this.boss = fileManager.loadBossState();
+        
+        // ⭐ Manager와 Player/Dashboard/Boss 연결 설정 (11/11, 12/05)
         this.manager.setPlayer(this.player); 
-        this.manager.setDashboard(this); 
+        this.manager.setDashboard(this);
+        this.manager.setBoss(this.boss); // ⭐ 보스 연결 추가 
         
         // ⭐ CRITICAL FIX: initUI()를 먼저 호출하여 logArea를 초기화 (2025-11-12)
         initUI(); 
@@ -232,27 +238,162 @@ public class MainDashboard extends JFrame {
         updateTodayRoutinesUI(); // ⭐ (추가) 루틴 완료 시 목록 갱신 2025.11.17 - 김민기
     }
     
-    // 2. 보스 상태 패널 구현 (임시)
+    // 2. 보스 상태 패널 구현 ⭐ 실시간 업데이트 지원 (12/05)
     private JPanel createBossStatusPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createTitledBorder("오늘의 보스 상태"));
+        panel.setBorder(BorderFactory.createTitledBorder("이번 달 보스"));
         
         JPanel bossPanel = new JPanel(new BorderLayout());
         
-        // ⭐ 보스 이미지 (임시) ------------------------------------------------------------------------
-        JLabel bossImageLabel = new JLabel("[보스 이미지 영역]", JLabel.CENTER); 
+        // ⭐ 보스 이름 라벨 (12/05)
+        bossNameLabel = new JLabel(boss.getName(), JLabel.CENTER);
+        bossNameLabel.setFont(new Font("맑은 고딕", Font.BOLD, 16));
+        bossPanel.add(bossNameLabel, BorderLayout.NORTH);
+        
+        // ⭐ 보스 이미지
+        bossImageLabel = new JLabel("[보스 이미지 영역]", JLabel.CENTER); 
+        // 이미지 로드 시도
+        if (boss.getImagePath() != null) {
+            try {
+                // 클래스 기준 상대 경로로 이미지 로드 (J1103 패키지 내 images 폴더)
+                String imageName = boss.getImagePath().replace("images/", "");
+                java.net.URL imageUrl = getClass().getResource("images/" + imageName);
+                if (imageUrl != null) {
+                    ImageIcon originalIcon = new ImageIcon(imageUrl);
+                    if (originalIcon.getIconWidth() > 0) {
+                        // ⭐ 이미지 크기 조정 (최대 150x150)
+                        int maxSize = 150;
+                        int origWidth = originalIcon.getIconWidth();
+                        int origHeight = originalIcon.getIconHeight();
+                        int newWidth, newHeight;
+                        
+                        // 비율 유지하며 크기 조정
+                        if (origWidth > origHeight) {
+                            newWidth = maxSize;
+                            newHeight = (int) ((double) origHeight / origWidth * maxSize);
+                        } else {
+                            newHeight = maxSize;
+                            newWidth = (int) ((double) origWidth / origHeight * maxSize);
+                        }
+                        
+                        Image scaledImage = originalIcon.getImage().getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
+                        bossImageLabel.setIcon(new ImageIcon(scaledImage));
+                        bossImageLabel.setText("");
+                    }
+                }
+            } catch (Exception e) {
+                // 이미지 로드 실패 시 텍스트 유지
+                System.out.println("보스 이미지 로드 실패: " + e.getMessage());
+            }
+        }
         bossPanel.add(bossImageLabel, BorderLayout.CENTER); 
         
-        // ⭐ 보스 체력 바
-        JProgressBar bossHpBar = new JProgressBar(0, 100);
-        bossHpBar.setValue(100); // 시작 체력 100
-        bossHpBar.setForeground(Color.RED);
-        bossHpBar.setStringPainted(true);
-        bossHpBar.setString("HP: 100/100"); 
-        bossPanel.add(bossHpBar, BorderLayout.SOUTH);
+        // ⭐ 보스 설명 라벨 (12/05)
+        JLabel bossDescLabel = new JLabel(boss.getDesc(), JLabel.CENTER);
+        bossDescLabel.setFont(new Font("맑은 고딕", Font.ITALIC, 12));
+        bossPanel.add(bossDescLabel, BorderLayout.SOUTH);
         
         panel.add(bossPanel, BorderLayout.CENTER);
+        
+        // ⭐ 보스 체력 바 (필드로 저장하여 업데이트 가능)
+        bossHpBar = new JProgressBar(0, boss.getMaxHp());
+        bossHpBar.setValue(boss.getCurrentHp());
+        bossHpBar.setForeground(Color.RED);
+        bossHpBar.setStringPainted(true);
+        bossHpBar.setString("HP: " + boss.getCurrentHp() + "/" + boss.getMaxHp()); 
+        
+        panel.add(bossHpBar, BorderLayout.SOUTH);
+        
         return panel;
+    }
+    
+    /**
+     * ⭐ 보스 UI 갱신 메서드 (12/05)
+     * 루틴 완료 시 RoutineManager에서 호출됩니다.
+     */
+    public void updateBossUI() {
+        if (boss == null || bossHpBar == null) return;
+        
+        bossHpBar.setMaximum(boss.getMaxHp());
+        bossHpBar.setValue(boss.getCurrentHp());
+        bossHpBar.setString("HP: " + boss.getCurrentHp() + "/" + boss.getMaxHp());
+        
+        // 보스가 처치되었으면 색상 변경
+        if (boss.isDefeated()) {
+            bossHpBar.setForeground(Color.GRAY);
+            bossHpBar.setString("처치 완료!");
+            if (bossNameLabel != null) {
+                bossNameLabel.setText(boss.getName() + " (처치됨)");
+            }
+        }
+    }
+    
+    /**
+     * ⭐ 보스 히트 애니메이션 표시 (12/05)
+     * 히트 이미지를 2초간 보여주고 원래 이미지로 복원합니다.
+     */
+    public void showBossHitAnimation() {
+        if (boss == null || bossImageLabel == null) return;
+        
+        // 히트 이미지 로드
+        String hitImagePath = boss.getHitImagePath();
+        if (hitImagePath != null) {
+            ImageIcon hitIcon = loadBossImage(hitImagePath);
+            if (hitIcon != null) {
+                // 히트 이미지로 변경
+                bossImageLabel.setIcon(hitIcon);
+                
+                // 2초 후 원래 이미지로 복원하는 타이머
+                javax.swing.Timer timer = new javax.swing.Timer(2000, e -> {
+                    // 원래 이미지 복원
+                    String normalImagePath = boss.getImagePath();
+                    if (normalImagePath != null) {
+                        ImageIcon normalIcon = loadBossImage(normalImagePath);
+                        if (normalIcon != null) {
+                            bossImageLabel.setIcon(normalIcon);
+                        }
+                    }
+                });
+                timer.setRepeats(false); // 한 번만 실행
+                timer.start();
+            }
+        }
+    }
+    
+    /**
+     * ⭐ 보스 이미지를 로드하는 헬퍼 메서드 (12/05)
+     * @param imagePath 이미지 경로 (예: "images/SnowBoss.png")
+     * @return 크기 조정된 ImageIcon, 실패 시 null
+     */
+    private ImageIcon loadBossImage(String imagePath) {
+        try {
+            String imageName = imagePath.replace("images/", "");
+            java.net.URL imageUrl = getClass().getResource("images/" + imageName);
+            if (imageUrl != null) {
+                ImageIcon originalIcon = new ImageIcon(imageUrl);
+                if (originalIcon.getIconWidth() > 0) {
+                    // 이미지 크기 조정 (최대 150x150)
+                    int maxSize = 150;
+                    int origWidth = originalIcon.getIconWidth();
+                    int origHeight = originalIcon.getIconHeight();
+                    int newWidth, newHeight;
+                    
+                    if (origWidth > origHeight) {
+                        newWidth = maxSize;
+                        newHeight = (int) ((double) origHeight / origWidth * maxSize);
+                    } else {
+                        newHeight = maxSize;
+                        newWidth = (int) ((double) origWidth / origHeight * maxSize);
+                    }
+                    
+                    Image scaledImage = originalIcon.getImage().getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
+                    return new ImageIcon(scaledImage);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("보스 이미지 로드 실패: " + e.getMessage());
+        }
+        return null;
     }
     
     // 3. 로그 패널 구현 
@@ -292,7 +433,7 @@ public class MainDashboard extends JFrame {
      // 상단: 현재 날짜 표시
         // ⭐ getTodayKoreanDayName() 메서드는 아래 D 단계에서 추가
         String todayDayName = getTodayKoreanDayName(); 
-        JLabel dateLabel = new JLabel(LocalDate.now().toString() + " (" + todayDayName + "요일)", JLabel.CENTER);
+        JLabel dateLabel = new JLabel(DateUtil.getToday().toString() + " (" + todayDayName + "요일)", JLabel.CENTER);
         panel.add(dateLabel, BorderLayout.NORTH);
 
         // 중앙: JList 초기화
@@ -307,13 +448,12 @@ public class MainDashboard extends JFrame {
     
     // ⭐오늘 요일 이름 반환 헬퍼 메서드 25.11.17
     private String getTodayKoreanDayName() {
-        DayOfWeek dayOfWeek = LocalDate.now().getDayOfWeek();
-        // Locale을 한국어로 설정하여 "월", "화" 등으로 표시
-        return dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.KOREA);
+        return DateUtil.getTodayKoreanDay();
     }
     
     /**
      * ⭐ (신규) '오늘의 루틴' JList를 최신 데이터로 갱신합니다.
+     * ⭐ 완료된 루틴은 아래로 정렬됩니다.
      */
     public void updateTodayRoutinesUI() {
         if (todayRoutineListModel == null) return; // UI가 아직 초기화되지 않았다면 종료
@@ -327,9 +467,29 @@ public class MainDashboard extends JFrame {
         if (routines.isEmpty()) {
             todayRoutineListModel.addElement("✅ 오늘 루틴이 없습니다. 휴식을 취하세요!");
         } else {
-            for (Routine routine : routines) {
-                // 완료 여부에 따라 텍스트 포맷팅
-                String status = routine.isCompletedToday() ? "[✔ 완료]" : "[☐ 미완료]";
+            // ⭐ 완료되지 않은 루틴 먼저, 완료된 루틴 나중에 정렬
+            List<Routine> sortedRoutines = routines.stream()
+                .sorted((r1, r2) -> {
+                    boolean c1 = r1.isCompletedForDay(todayDayName);
+                    boolean c2 = r2.isCompletedForDay(todayDayName);
+                    return Boolean.compare(c1, c2);
+                })
+                .collect(Collectors.toList());
+            
+            // ⭐ 완료/미완료 개수 계산
+            long completedCount = sortedRoutines.stream()
+                .filter(r -> r.isCompletedForDay(todayDayName))
+                .count();
+            long totalCount = sortedRoutines.size();
+            
+            // ⭐ 상단에 진행 현황 표시
+            todayRoutineListModel.addElement(String.format("📊 진행 현황: %d / %d 완료", completedCount, totalCount));
+            todayRoutineListModel.addElement("────────────────────");
+            
+            for (Routine routine : sortedRoutines) {
+                // ⭐ isCompletedForDay 사용 (오늘 요일 기준)
+                boolean isCompleted = routine.isCompletedForDay(todayDayName);
+                String status = isCompleted ? "[✔ 완료]" : "[☐ 미완료]";
                 todayRoutineListModel.addElement(status + " " + routine.getName());
             }
         }
