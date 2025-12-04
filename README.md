@@ -1,164 +1,258 @@
-# My-Routine-Adventure
-2025-2 Java project
-<br/>
+<div align="center">
 
-🎮 텍스트 RPG 루틴 관리 프로그램
+# 🎮 My-Routine-Adventure
 
-일상 루틴을 게임처럼 즐겁게! RPG 요소를 접목한 루틴 관리 시스템
-<br />
-<br />
-📌 프로젝트 주제 및 목적
+**루틴 관리와 RPG 게이미피케이션을 결합한 Java Swing 데스크톱 애플리케이션**
 
-배경
+[![Java](https://img.shields.io/badge/Java-8%2B-orange?style=for-the-badge&logo=openjdk&logoColor=white)](https://www.java.com/)
+[![Swing](https://img.shields.io/badge/Swing-GUI-blue?style=for-the-badge)](https://docs.oracle.com/javase/tutorial/uiswing/)
+[![License](https://img.shields.io/badge/License-Educational-green?style=for-the-badge)](./LICENSE)
 
-기존의 단조로운 루틴 관리 방식은 초기에는 유용하지만, 시간이 지남에 따라 사용자의 흥미를 유지하기 어렵습니다.
+[📖 문서](./J1103/docs/) · [🐛 버그 리포트](https://github.com/muonnon/My-Routine-Adventure/issues) · [💡 기능 제안](https://github.com/muonnon/My-Routine-Adventure/issues)
 
-단순 체크리스트만으로는 성취감이 즉각적으로 제공되지 않아 지속적인 사용이 어렵고, 결국 루틴 형성에 실패하는 경우가 많습니다.
+</div>
 
-목적
+---
 
-본 프로젝트는 텍스트 RPG(Role-Playing Game)의 성장 및 보상 요소를 루틴 관리에 접목하여, 사용자가 루틴을 보다 즐겁게 형성하고 꾸준히 실천하도록 돕는 것을 목표로 합니다.
+## 📋 목차
 
-핵심 기능
+- [소개](#-소개)
+- [주요 기능](#-주요-기능)
+- [스크린샷](#-스크린샷)
+- [시작하기](#-시작하기)
+  - [사전 요구사항](#사전-요구사항)
+  - [설치](#설치)
+  - [실행](#실행)
+- [사용법](#-사용법)
+- [프로젝트 구조](#-프로젝트-구조)
+- [기술 스택](#-기술-스택)
+- [문서](#-문서)
+- [기여하기](#-기여하기)
+- [팀원](#-팀원)
+- [라이선스](#-라이선스)
 
-루틴 → 임무: 일상 루틴을 게임 속 임무로 전환
+---
 
-경험치 & 레벨업: 루틴 달성 시 경험치 획득 및 캐릭터 성장
+## 🎯 소개
 
-보스 시스템: 월간 테마 보스를 격파하며 스토리 진행
+**My-Routine-Adventure (MRA)**는 일상 루틴 관리에 RPG 게임 요소를 접목한 데스크톱 애플리케이션입니다.
 
-아이템 & 인벤토리: 골드로 아이템 구매 및 캐릭터 강화
+### 배경
 
-연속 달성 현황: 달력 형태로 루틴 완료 기록 확인
-<br />
-<br />
-💻 시스템 요구사항
+기존의 단조로운 루틴 관리 방식은 시간이 지남에 따라 사용자의 흥미를 유지하기 어렵습니다. 단순 체크리스트만으로는 성취감이 즉각적으로 제공되지 않아 지속적인 사용이 어렵고, 결국 루틴 형성에 실패하는 경우가 많습니다.
 
-Java: JDK 8 이상
+### 목적
 
-운영체제: Windows, macOS, Linux (Java 지원 OS)
+본 프로젝트는 **텍스트 RPG의 성장 및 보상 요소**를 루틴 관리에 접목하여, 사용자가 루틴을 보다 즐겁게 형성하고 꾸준히 실천하도록 돕는 것을 목표로 합니다.
 
-IDE: Eclipse, IntelliJ IDEA 권장 (선택사항)
-<br />
-<br />
-🚀 설치 및 실행 방법
-1. 저장소 클론
+---
 
-bashgit clone https://github.com/your-username/routine-rpg.git
-cd routine-rpg
+## ✨ 주요 기능
 
-2. Eclipse에서 실행
-방법 A: 프로젝트 Import
+### 🎮 게이미피케이션
+| 기능 | 설명 |
+|------|------|
+| **경험치 & 레벨업** | 루틴 완료 시 EXP +10 획득, 레벨업 시스템 |
+| **골드 시스템** | 루틴 완료 시 골드 +5 획득, 상점에서 아이템 구매 |
+| **아이템 드랍** | 20% 확률로 랜덤 아이템 획득 |
 
-Eclipse 실행
+### 👹 월별 보스 시스템
+- 매달 새로운 테마 보스 등장
+- 루틴 완료로 보스에게 데미지
+- 보스 처치 시 스토리 엔딩 표시
 
-File → Import... → General → Existing Projects into Workspace
+### 🎒 인벤토리 & 장비 시스템
+- 4가지 장착 부위: 머리, 몸통, 다리, 무기
+- 장비 효과: 보스 공격력 증가 / 경험치 보너스
+- 상점에서 골드로 장비 구매
 
-클론한 프로젝트 폴더 선택 → Finish
-<br />
+### 📊 통계 & 연속 달성
+- 월간 달성률 통계
+- 달력 기반 스트릭(연속 달성) 표시
+- 격려 메시지 제공
 
-방법 B: 직접 실행
+### 💾 데이터 영속성
+- 텍스트 파일 기반 자동 저장/로드
+- 프로그램 종료 시 자동 저장
 
-src/J1103 패키지 열기
+---
 
-MainDashboard.java 파일 우클릭
+## 📸 스크린샷
 
-Run As → Java Application
+> 📷 *스크린샷 추가 예정*
 
-3. IntelliJ IDEA에서 실행
-   
-File → Open → 프로젝트 폴더 선택
+<!--
+<div align="center">
+<img src="./screenshots/dashboard.png" width="45%" />
+<img src="./screenshots/inventory.png" width="45%" />
+</div>
+-->
 
-src/J1103/MainDashboard.java 파일 열기
+---
 
-Run 버튼 클릭 또는 Shift + F10
-<br />
-<br />
-🎮 사용 방법
-1. 루틴 생성
+## � 시작하기
 
-메인 화면에서 루틴 생성 버튼 클릭
+### 사전 요구사항
 
-루틴 이름, 태그, 반복 요일 설정
+- **Java JDK 8 이상** (권장: JDK 11+)
+- **운영체제**: Windows, macOS, Linux (Java 지원 OS)
+- **IDE**: Eclipse, IntelliJ IDEA, VS Code (선택사항)
 
-루틴 생성 클릭
+### 설치
 
-2. 루틴 완료
-   
-루틴 목록/수정/삭제 버튼 클릭
+1. **저장소 클론**
+   ```bash
+   git clone https://github.com/muonnon/My-Routine-Adventure.git
+   cd My-Routine-Adventure
+   ```
 
-요일별 탭에서 완료한 루틴 체크
+2. **프로젝트 디렉토리로 이동**
+   ```bash
+   cd J1103
+   ```
 
-자동으로 경험치 및 골드 획득
+### 실행
 
-3. 아이템 구매
-   
-메인 화면에서 아이템 상점 버튼 클릭
+#### 🖥️ 커맨드라인 실행
+```bash
+# 컴파일
+javac -d bin src/J1103/*.java
 
-원하는 아이템 선택 후 구매
+# 실행
+java -cp bin J1103.MainDashboard
+```
 
-인벤토리 보기에서 아이템 장착
+#### 🔧 Eclipse에서 실행
+1. `File` → `Import...` → `General` → `Existing Projects into Workspace`
+2. 클론한 프로젝트 폴더 선택 → `Finish`
+3. `src/J1103/MainDashboard.java` 우클릭 → `Run As` → `Java Application`
 
-4. 연속 달성 확인
-   
-메인 화면 상단 탭에서 🔥 연속 달성 현황 선택
+#### 💡 IntelliJ IDEA에서 실행
+1. `File` → `Open` → 프로젝트 폴더 선택
+2. `src/J1103/MainDashboard.java` 파일 열기
+3. `Run` 버튼 클릭 또는 `Shift + F10`
 
-달력에서 완료한 날짜 확인 (초록색 표시)
-<br />
-<br />
-🛠️ 주요 기능
+---
 
-✅ 루틴 관리
+## 📖 사용법
 
-루틴 생성/수정/삭제
+### 1️⃣ 루틴 생성
+1. 메인 화면에서 **[루틴 생성]** 버튼 클릭
+2. 루틴 이름, 태그, 반복 요일 설정
+3. **[루틴 생성]** 클릭하여 저장
 
-요일별 반복 설정
+### 2️⃣ 루틴 완료
+1. **[루틴 목록/수정/삭제]** 버튼 클릭
+2. 요일별 탭에서 완료한 루틴 체크 ✅
+3. 자동으로 경험치/골드 획득 및 보스 공격
 
-태그별 분류 (운동, 공부, 생활 등)
+### 3️⃣ 아이템 구매 & 장착
+1. **[상점]** 버튼 클릭
+2. 원하는 아이템 선택 후 구매
+3. **[인벤토리]**에서 아이템 장착
 
-🎯 RPG 요소
+### 4️⃣ 통계 확인
+- 상단 탭에서 **🔥 연속 달성 현황** 선택 → 달력 확인
+- 상단 탭에서 **📊 월간 통계** 선택 → 달성률 확인
 
-경험치 획득 및 레벨업
+---
 
-골드 획득
+## 📁 프로젝트 구조
 
-보스 HP 감소 (하루 첫 체크만)
+```
+My-Routine-Adventure/
+├── README.md                    # 프로젝트 소개 (현재 파일)
+├── J1103/
+│   ├── src/J1103/               # 소스 코드
+│   │   ├── MainDashboard.java   # 메인 진입점 및 대시보드 UI
+│   │   ├── Player.java          # 플레이어 데이터 모델
+│   │   ├── Routine.java         # 루틴 데이터 모델
+│   │   ├── RoutineManager.java  # 루틴 비즈니스 로직
+│   │   ├── FileManager.java     # 파일 입출력
+│   │   ├── Boss.java            # 보스 데이터 모델
+│   │   ├── Item.java            # 아이템 데이터 모델
+│   │   ├── Inventory.java       # 인벤토리 관리
+│   │   ├── ItemDropManager.java # 아이템 드랍 로직
+│   │   ├── RoutineManagerGUI.java   # 루틴 생성 GUI
+│   │   ├── RoutineListView.java     # 루틴 목록 GUI
+│   │   ├── RoutineModify.java       # 루틴 수정 다이얼로그
+│   │   ├── InventoryView.java   # 인벤토리 GUI
+│   │   ├── ShopView.java        # 상점 GUI
+│   │   ├── StreakWindow.java    # 연속 달성 달력
+│   │   ├── StatisticsPanel.java # 월간 통계 패널
+│   │   └── ...
+│   ├── docs/                    # 상세 문서
+│   ├── bin/                     # 컴파일된 클래스 파일
+│   ├── player_data.txt          # 플레이어 저장 데이터
+│   ├── routines_data.txt        # 루틴 저장 데이터
+│   └── boss_data.txt            # 보스 저장 데이터
+```
 
-🛒 상점 & 인벤토리
+---
 
-골드로 아이템 구매
+## �️ 기술 스택
 
-장비 장착/해제
+| 분류 | 기술 |
+|------|------|
+| **언어** | Java SE 8+ |
+| **GUI** | Java Swing |
+| **데이터 저장** | 텍스트 파일 (CSV 유사 형식) |
+| **아키텍처** | MVC (Model-View-Controller) |
 
-보스 공격력 증가 또는 경험치 보너스
-<br />
-<br />
-📊 통계
+---
 
-오늘의 루틴 목록
+## 📚 문서
 
-완료/미완료 상태 표시
+상세한 기술 문서는 `J1103/docs/` 폴더에서 확인할 수 있습니다:
 
-연속 달성 일수 달력
-<br />
-<br />
-💾 데이터 저장
+| 문서 | 설명 |
+|------|------|
+| [ARCHITECTURE.md](./J1103/docs/ARCHITECTURE.md) | 전체 아키텍처 및 클래스 다이어그램 |
+| [CLASSES.md](./J1103/docs/CLASSES.md) | 각 클래스별 상세 설명 |
+| [DATA_MODEL.md](./J1103/docs/DATA_MODEL.md) | 데이터 모델 및 파일 포맷 |
+| [UI_GUIDE.md](./J1103/docs/UI_GUIDE.md) | UI 구조 및 화면 설명 |
+| [FEATURES.md](./J1103/docs/FEATURES.md) | 기능 상세 및 요구사항 매핑 |
 
-프로그램 종료 시 자동 저장
+---
 
-프로그램 시작 시 자동 불러오기
-<br />
-<br />
-📧 문의처
+## 🤝 기여하기
 
-프로젝트 관련 문의사항이나 버그 제보는 아래 이메일로 연락주세요
+프로젝트에 기여하고 싶으시다면 다음 단계를 따라주세요:
 
-개발자 이메일
-- alsrl2232@naver.com 
-- tkfkdalfl0612@gmail.com
-- pgwoo092@gmail.com
-<br />
-<br />
-📝 라이선스
+1. 이 저장소를 **Fork** 합니다
+2. 새 브랜치를 생성합니다 (`git checkout -b feature/AmazingFeature`)
+3. 변경사항을 커밋합니다 (`git commit -m 'Add some AmazingFeature'`)
+4. 브랜치에 푸시합니다 (`git push origin feature/AmazingFeature`)
+5. **Pull Request**를 생성합니다
 
-이 프로젝트는 교육 목적으로 개발되었습니다.
+### 버그 리포트 & 기능 제안
+
+- [이슈 페이지](https://github.com/muonnon/My-Routine-Adventure/issues)에서 버그 리포트나 기능 제안을 해주세요.
+
+---
+
+## 👥 팀원
+
+| 이름 | 이메일 | 역할 |
+|------|--------|------|
+| 팀원 1 | alsrl2232@naver.com | Developer |
+| 팀원 2 | tkfkdalfl0612@gmail.com | Developer |
+| 팀원 3 | pgwoo092@gmail.com | Developer |
+
+---
+
+## � 라이선스
+
+이 프로젝트는 **교육 목적**으로 개발되었습니다.
+
+2025-2학기 Java 프로젝트
+
+---
+
+<div align="center">
+
+**⭐ 이 프로젝트가 마음에 드셨다면 Star를 눌러주세요! ⭐**
+
+Made with ❤️ by MRA Team
+
+</div>
