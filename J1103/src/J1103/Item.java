@@ -9,7 +9,8 @@ public class Item implements Serializable {
 
 	// 장비 부위를 정의하는 Enum
 	public enum EquipSlot {
-		HEAD("머리"), BODY("몸통"), LEG("다리"), WEAPON("무기"),ETC("기타"); // 25.11.19 - 김민기 : 무기 추가
+		HEAD("머리"), BODY("몸통"), LEG("다리"), WEAPON("무기"), // 25.11.19 - 김민기 : 무기 추가
+		NONE("없음"); // 수정(11/21) 장착 불가 아이템을 위한 NONE 슬롯 추가
 
 		private final String koreanName;
 		EquipSlot(String koreanName) { this.koreanName = koreanName; }

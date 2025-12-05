@@ -32,223 +32,155 @@ public class RoutineListView extends JFrame {
         setSize(600, 400);
         setLocationRelativeTo(null);
         
-        // 메인 컨테이너에 요일별 탭 배치
-        JTabbedPane tabbedPane = createTabbedPane();
+        // 탭 패널 초기화
+        JTabbedPane tabbedPane = initTabbedPane();
         add(tabbedPane, BorderLayout.CENTER);
         
-        loadAllRoutines(); // 초기 데이터 로드
-
-        setVisible(true); 
+        // 테이블 모델 리스너 초기화 (체크박스 클릭 처리)
+        initTableListeners();
     }
-
-    private JTabbedPane createTabbedPane() {
+    
+    /**
+     * 요일별 탭 패널을 생성하고 각 탭에 테이블을 추가합니다.
+     */
+    private JTabbedPane initTabbedPane() {
         JTabbedPane tabbedPane = new JTabbedPane();
         
         for (String day : DAYS) {
-            // ⭐ 2025-11-12: 모델 생성 시 TABLE_HEADERS를 사용하여 4개 컬럼을 만듭니다.
+            // 테이블 모델 생성
             DefaultTableModel model = new DefaultTableModel(TABLE_HEADERS, 0) {
-                // 첫 번째 컬럼("완료")을 JCheckBox로 렌더링하도록 타입 지정
+                // 체크박스 컬럼(0번)을 Boolean 타입으로 설정하여 체크박스로 렌더링되게 합니다.
                 @Override
                 public Class<?> getColumnClass(int columnIndex) {
-                    return columnIndex == 0 ? Boolean.class : String.class;
+                    if (columnIndex == 0) return Boolean.class;
+                    // Routine ID 컬럼(3번)은 숨기므로 String 타입으로 둡니다.
+                    return String.class; 
                 }
-                
-                // ⭐ 2025-11-12: 핵심 수정! 루틴이 이미 완료되었으면(true) 클릭 불가 처리 (체크박스 풀림 문제 해결)
+                // Routine ID 컬럼(3번)을 제외한 나머지 컬럼은 편집 가능하도록 설정
                 @Override
                 public boolean isCellEditable(int row, int column) {
-                    if (column == 3) return false; // ID는 수정 불가
-                    if (column == 0) {
-                        // 완료 여부를 가져옵니다.
-                        Boolean isCompleted = (Boolean) getValueAt(row, 0); 
-                        // 이미 완료되었으면(true) 수정(클릭) 불가
-                        return !isCompleted; 
-                    }
-                    return true; // 이름, 태그는 수정 가능
+                    return column == 0; // 완료(체크박스) 컬럼만 편집 가능
                 }
             };
             dayTableModels.put(day, model);
-
+            
             JTable table = new JTable(model);
+            
+            // 1. Routine ID 컬럼 숨기기 (사용자에게는 보이지 않게)
             table.getColumnModel().getColumn(3).setMinWidth(0);
             table.getColumnModel().getColumn(3).setMaxWidth(0);
-            table.getColumnModel().getColumn(3).setWidth(0); // Routine ID 컬럼 숨김
+            table.getColumnModel().getColumn(3).setWidth(0);
+
+            // 2. 컬럼 너비 조정
+            table.getColumnModel().getColumn(0).setPreferredWidth(50);  // 완료
+            table.getColumnModel().getColumn(1).setPreferredWidth(200); // 루틴 이름
+            table.getColumnModel().getColumn(2).setPreferredWidth(100); // 태그
             
-			// --251119: 완료된 루틴 배경색 변경을 위한 셀 렌더러 설정
-			table.setDefaultRenderer(Object.class, new RoutineCellRenderer(day, manager));		
-			// --251119: 체크박스 클릭 이벤트 리스너 추가
-			model.addTableModelListener(new RoutineCompletionListener(day));
+            // 3. 렌더러 설정
+            // Custom Renderer는 RoutineManager가 필요함.
+            RoutineRenderer renderer = new RoutineRenderer(); 
+            table.setDefaultRenderer(Boolean.class, renderer);
+            table.setDefaultRenderer(String.class, renderer);
+            
+            // 4. 우클릭 팝업 리스너 추가
+            table.addMouseListener(new PopupListener(table, manager, this));
 
-			table.addMouseListener(new PopupListener(table, manager, this));
+            tabbedPane.addTab(day, new JScrollPane(table));
+        }
+        
+        return tabbedPane;
+    }
+    
+    /**
+     * 테이블 모델에 리스너를 추가하여 '완료' 체크박스 클릭 시 루틴을 완료 처리합니다.
+     */
+    private void initTableListeners() {
+        for (Map.Entry<String, DefaultTableModel> entry : dayTableModels.entrySet()) {
+            String day = entry.getKey();
+            DefaultTableModel model = entry.getValue();
+            
+            // TableModelListener는 데이터가 변경될 때마다 호출됩니다.
+            model.addTableModelListener(new TableModelListener() {
+                @Override
+                public void tableChanged(TableModelEvent e) {
+                    // 0번 컬럼(체크박스)이 변경되었을 때만 처리
+                    if (e.getColumn() == 0 && e.getType() == TableModelEvent.UPDATE) {
+                        int row = e.getFirstRow();
+                        
+                        // 현재 상태 (클릭 후의 상태)
+                        Boolean isChecked = (Boolean) model.getValueAt(row, 0); 
 
-			tabbedPane.addTab(day + "요일", new JScrollPane(table));
-		}
-		return tabbedPane;
-	}
+                        // 체크되었을 때만 완료 처리 로직 실행
+                        if (isChecked) {
+                            String routineId = (String) model.getValueAt(row, 3);
+                            
+                            // 루틴 완료 처리
+                            boolean success = manager.completeRoutine(routineId, day);
 
-	// --251119: 현재 요일을 기준으로 대상 요일이 미래인지 확인
-	private boolean isFutureDay(String targetDay) {
-		DayOfWeek currentDay = LocalDate.now().getDayOfWeek();
-		DayOfWeek targetDayOfWeek = getDayOfWeek(targetDay);
+                            if (success) {
+                                // 완료 처리 성공 시 테이블 UI 갱신 (색상 변경 등을 위해)
+                                loadAllRoutines();
+                            } else {
+                                // 완료 처리 실패(이미 완료된 경우 등) 시 체크박스를 다시 해제해야 합니다.
+                                // 재귀 호출 방지를 위해 리스너를 잠시 제거 후 값 변경
+                                model.removeTableModelListener(this);
+                                model.setValueAt(false, row, 0); 
+                                model.addTableModelListener(this);
+                                System.out.println("루틴 완료 처리 실패 또는 이미 완료됨: " + routineId);
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+    
+    /**
+     * 모든 요일의 테이블 데이터를 갱신합니다.
+     * RoutineModify, RoutineManagerGUI, Checkbox 클릭 등 여러 곳에서 호출됩니다.
+     */
+    public void loadAllRoutines() {
+        // 현재 요일을 구하는 헬퍼 메서드 (DayOfWeek를 한글 요일로 변환)
+        String todayDay = getKoreanDayOfWeek(LocalDate.now().getDayOfWeek());
+        
+        for (String day : DAYS) {
+            DefaultTableModel model = dayTableModels.get(day);
+            // 1. 기존 데이터 모두 삭제
+            model.setRowCount(0); 
 
-		if (targetDayOfWeek == null)
-			return false;
+            // 2. RoutineManager로부터 해당 요일의 루틴 목록을 가져옵니다.
+            // ⭐ 오류 수정: 메서드 이름을 getRoutinesByDay로 변경
+            List<Routine> routines = manager.getRoutinesByDay(day); // 수정(11/21) 메서드 이름 통일: getRoutinesForDay -> getRoutinesByDay
 
-		return targetDayOfWeek.getValue() > currentDay.getValue();
-	}
-
-	// --251119: 과거 요일인지 확인 (오늘 체크 가능)
-	private boolean isTooPastDay(String targetDay) {
-		DayOfWeek currentDay = LocalDate.now().getDayOfWeek();
-		DayOfWeek targetDayOfWeek = getDayOfWeek(targetDay);
-
-		if (targetDayOfWeek == null)
-			return false;
-
-		// 현재 요일과 타겟 요일 사이의 일수 차이 계산
-		int daysBetween = (currentDay.getValue() - targetDayOfWeek.getValue() + 7) % 7;
-
-		// 2일 이상 지난 과거 요일이면 true 반환
-		return daysBetween >= 1;
-	}
-
-	// --251119: 한글 요일 문자열을 DayOfWeek Enum으로 변환
-	private DayOfWeek getDayOfWeek(String day) {
-		switch (day) {
-		case "월":
-			return DayOfWeek.MONDAY;
-		case "화":
-			return DayOfWeek.TUESDAY;
-		case "수":
-			return DayOfWeek.WEDNESDAY;
-		case "목":
-			return DayOfWeek.THURSDAY;
-		case "금":
-			return DayOfWeek.FRIDAY;
-		case "토":
-			return DayOfWeek.SATURDAY;
-		case "일":
-			return DayOfWeek.SUNDAY;
-		default:
-			return null;
-		}
-	}
-
-	// --251119: 루틴 목록 로딩 로직 (요일별 완료 상태 반영 + 자동 정렬)
-	public void loadAllRoutines() {
-		for (String day : DAYS) {
-			List<Routine> dailyRoutines = manager.getRoutinesForDay(day);
-			DefaultTableModel model = dayTableModels.get(day);
-
-			model.setRowCount(0);
-
-			for (Routine routine : dailyRoutines) {
-				boolean isCompleted = routine.isCompletedForDay(day);
-				model.addRow(new Object[] { isCompleted, routine.getName(), routine.getTag(), routine.getId() });
-			}
-		}
-	}
-
-	// --251119: 루틴 완료 상태 변경 이벤트를 처리하는 리스너 클래스
-	private class RoutineCompletionListener implements TableModelListener {
-		private final String day;
-
-		public RoutineCompletionListener(String day) {
-			this.day = day;
-		}
-
-		@Override
-		public void tableChanged(TableModelEvent e) {
-			if (e.getType() == TableModelEvent.UPDATE) {
-				int row = e.getFirstRow();
-				int column = e.getColumn();
-
-				if (column == 0) {
-					DefaultTableModel model = (DefaultTableModel) e.getSource();
-					Boolean isChecked = (Boolean) model.getValueAt(row, 0);
-					String routineId = (String) model.getValueAt(row, 3);
-
-					Routine routine = manager.getRoutine(routineId);
-					if (routine == null)
-						return;
-
-					// 체크 해제 방지 로직
-					if (!isChecked) {
-						if (routine.isCompletedForDay(this.day)) {
-							SwingUtilities.invokeLater(() -> model.setValueAt(true, row, 0));
-							return;
-						}
-						return;
-					}
-
-					// 미래 요일 체크 방지
-					if (isFutureDay(this.day)) {
-						JOptionPane.showMessageDialog(RoutineListView.this, this.day + "은(는) 미래 요일이므로 루틴을 완료할 수 없습니다.",
-								"경고", JOptionPane.WARNING_MESSAGE);
-						SwingUtilities.invokeLater(() -> model.setValueAt(false, row, 0));
-						return;
-					}
-
-					// 2일 이상 지난 과거 요일 체크 방지
-					if (isTooPastDay(this.day)) {
-						JOptionPane.showMessageDialog(RoutineListView.this,
-								this.day + "요일은 하루 이상 지난 과거 요일이므로 루틴을 완료할 수 없습니다.\n(어제까지만 체크 가능합니다)", "경고",
-								JOptionPane.WARNING_MESSAGE);
-						SwingUtilities.invokeLater(() -> model.setValueAt(false, row, 0));
-						return;
-					}
-
-					// 루틴 완료 처리
-					boolean success = manager.completeRoutine(routineId, this.day);
-
-					if (success) {
-						loadAllRoutines();
-					} else {
-						System.out.println("루틴 완료 처리 실패 또는 이미 완료됨: " + routineId);
-					}
-				}
-			}
-		}
-	}
-
-	// --251119: 테이블 셀의 배경색을 커스터마이징하는 렌더러 클래스
-	private class RoutineCellRenderer extends DefaultTableCellRenderer {
-		private final String day;
-		private final RoutineManager manager;
-
-		public RoutineCellRenderer(String day, RoutineManager manager) {
-			this.day = day;
-			this.manager = manager;
-			setOpaque(true);
-		}
-
-		@Override
-		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
-				int row, int column) {
-
-			Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-
-			String routineId = (String) table.getModel().getValueAt(row, 3);
-			Routine routine = manager.getRoutine(routineId);
-
-			// 완료된 루틴은 회색 배경 처리
-			if (routine != null && routine.isCompletedForDay(day)) {
-				c.setBackground(new Color(220, 220, 220));
-			} else {
-				if (isSelected) {
-					c.setBackground(table.getSelectionBackground());
-				} else {
-					c.setBackground(table.getBackground());
-				}
-			}
-
-			// 미래 요일 또는 2일 이상 지난 과거 요일의 루틴은 텍스트 회색 처리
-			if (isFutureDay(day) || isTooPastDay(day)) {
-				c.setForeground(Color.GRAY);
-			} else {
-				c.setForeground(table.getForeground());
-			}
-
-			return c;
-		}
-	}
+            // 3. 테이블에 데이터 추가
+            for (Routine routine : routines) {
+                // 해당 요일에 오늘 완료했는지 확인
+                boolean isCompleted = routine.isCompletedForDay(day); 
+                
+                // 테이블에 표시할 데이터 배열 생성
+                // { 완료(Boolean), 이름(String), 태그(String), ID(String) }
+                Object[] rowData = {
+                    isCompleted, 
+                    routine.getName(), 
+                    routine.getTag(), 
+                    routine.getId()
+                };
+                model.addRow(rowData);
+            }
+        }
+        
+        // ⭐ 오늘의 요일 탭으로 강제 이동 (선택적)
+        JTabbedPane tabbedPane = (JTabbedPane) getContentPane().getComponent(0);
+        int todayIndex = java.util.Arrays.asList(DAYS).indexOf(todayDay);
+        if (todayIndex >= 0) {
+            tabbedPane.setSelectedIndex(todayIndex);
+        }
+    }
+    
+    /**
+     * java.time.DayOfWeek를 한글 요일 문자열로 변환합니다.
+     */
+    private String getKoreanDayOfWeek(DayOfWeek dayOfWeek) {
+        return dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.KOREAN);
+    }
 }

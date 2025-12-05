@@ -33,6 +33,7 @@ public class InventoryView extends JFrame {
         
         // 1. 상단: 플레이어 요약 정보
         JPanel statusPanel = new JPanel(new GridLayout(2, 1));
+        // 플레이어 기본 정보 표시
         JLabel nameLabel = new JLabel(player.getName() + " (Lv." + player.getLevel() + ") | 골드: " + player.getGold() + " G", JLabel.CENTER);
         nameLabel.setFont(new Font("맑은 고딕", Font.BOLD, 16));
         
@@ -52,6 +53,7 @@ public class InventoryView extends JFrame {
         // 탭 1: 착용 중인 장비 (Equipped)
         JPanel equipPanel = new JPanel(new BorderLayout());
         String[] equipCols = {"부위", "아이템 이름", "효과"};
+        // 테이블 모델 정의: 장착 장비 목록을 표시
         equipModel = new DefaultTableModel(equipCols, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
         };
@@ -67,6 +69,7 @@ public class InventoryView extends JFrame {
         // 탭 2: 가방 (Inventory)
         JPanel invenPanel = new JPanel(new BorderLayout());
         String[] invenCols = {"아이템 이름", "부위", "효과", "가격"};
+        // 테이블 모델 정의: 인벤토리 목록을 표시
         inventoryModel = new DefaultTableModel(invenCols, 0) {
             @Override public boolean isCellEditable(int row, int col) { return false; }
         };
@@ -93,9 +96,16 @@ public class InventoryView extends JFrame {
     private void refreshData() {
         // 1. 착용 장비 갱신
         equipModel.setRowCount(0);
+        // Player.getEquippedItems()는 Map<EquipSlot, Item>을 반환합니다.
         Map<Item.EquipSlot, Item> equipped = player.getEquippedItems();
+        
+        // (11/21) [수정] Map을 순회하기 위해 .entrySet()을 사용해야 합니다.
+        // Map 객체를 바로 for-each 루프에 사용할 수 없다는 컴파일 오류를 해결합니다.
         for (Map.Entry<Item.EquipSlot, Item> entry : equipped.entrySet()) {
             Item item = entry.getValue();
+            // null 슬롯은 스킵
+            if (item == null) continue; 
+            
             String effectStr = item.getEffectType().getDesc() + " +" + item.getEffectValue();
             equipModel.addRow(new Object[]{
                 entry.getKey().getKoreanName(), // 부위 (한글)
@@ -106,11 +116,21 @@ public class InventoryView extends JFrame {
         
         // 2. 인벤토리 갱신
         inventoryModel.setRowCount(0);
-        for (Item item : player.getInventory()) {
+        
+        // (11/21) [수정] Player.getInventory()가 Inventory 객체를 반환하도록 변경됨에 따라,
+        // List<Item>을 얻기 위해 Inventory 객체의 .getItems()를 호출합니다.
+        for (Item item : player.getInventory().getItems()) { 
             String effectStr = item.getEffectType().getDesc() + " +" + item.getEffectValue();
+            
+            // 인벤토리 테이블에는 장착 부위를 한글로 표시
+            String slotName = item.getSlot().getKoreanName();
+            if (item.getSlot() == Item.EquipSlot.NONE) {
+                slotName = "소모품"; // 장착 슬롯이 없는 아이템은 '소모품' 등으로 표시
+            }
+            
             inventoryModel.addRow(new Object[]{
                 item.getName(),
-                item.getSlot().getKoreanName(),
+                slotName,
                 effectStr,
                 item.getPrice() + " G"
             });
@@ -122,8 +142,11 @@ public class InventoryView extends JFrame {
         int selectedRow = inventoryTable.getSelectedRow();
         if (selectedRow >= 0) {
             // 선택된 행의 아이템 가져오기 (List 순서와 Table 순서가 같다고 가정)
-            Item item = player.getInventory().get(selectedRow);
-            player.equipItem(item); // Player의 장착 로직 실행
+            // (11/21) [수정] Player.getInventory()가 Inventory 객체를 반환하므로,
+            // List<Item>을 얻기 위해 .getItems().get(selectedRow)를 사용합니다.
+            Item item = player.getInventory().getItems().get(selectedRow);
+            
+            player.equipItem(item); // Player의 장착 로직 실행 (Inventory에 위임됨)
             refreshData(); // 화면 갱신
             JOptionPane.showMessageDialog(this, "장착했습니다!");
         } else {
@@ -148,7 +171,7 @@ public class InventoryView extends JFrame {
             }
             
             if (targetSlot != null) {
-                player.unequipItem(targetSlot); // Player의 해제 로직 실행
+                player.unequipItem(targetSlot); // Player의 해제 로직 실행 (Inventory에 위임됨)
                 refreshData(); // 화면 갱신
                 JOptionPane.showMessageDialog(this, "장착을 해제했습니다.");
             }

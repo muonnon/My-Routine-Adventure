@@ -1,13 +1,14 @@
 package J1103;
 
-import java.io.Serializable; // 12.01 객체 직렬화를 위한 추가
+
 import java.util.List; // ⭐ 이 줄을 추가해야 합니다.
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.time.LocalDate; // LocalDate 사용을 위해서
 import java.util.ArrayList; // ⭐ List<String> 수정용으로 추가 (11/11)
 
-public class Routine implements Serializable {
+
+public class Routine {
     private String id; // 고유 식별자 추가
     private String name;
     private String tag;
@@ -26,10 +27,7 @@ public class Routine implements Serializable {
     }
     
 
-    public Map<String, LocalDate> getLastCompletedDateMap() {
-        // 기존 필드를 반환합니다.
-        return lastCompletedDate;
-    }
+
     // ⭐ 로컬데이트에 관한 Getter 및 Setter 추가
     public Map<String, LocalDate> getLastCompletedDate() {
         return lastCompletedDate;
