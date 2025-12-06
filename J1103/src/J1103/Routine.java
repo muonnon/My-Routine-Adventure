@@ -1,14 +1,13 @@
 package J1103;
 
-
+import java.io.Serializable; // 12.01 객체 직렬화를 위한 추가
 import java.util.List; // ⭐ 이 줄을 추가해야 합니다.
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.time.LocalDate; // LocalDate 사용을 위해서
 import java.util.ArrayList; // ⭐ List<String> 수정용으로 추가 (11/11)
 
-
-public class Routine {
+public class Routine implements Serializable {
     private String id; // 고유 식별자 추가
     private String name;
     private String tag;
@@ -27,7 +26,10 @@ public class Routine {
     }
     
 
-
+    public Map<String, LocalDate> getLastCompletedDateMap() {
+        // 기존 필드를 반환합니다.
+        return lastCompletedDate;
+    }
     // ⭐ 로컬데이트에 관한 Getter 및 Setter 추가
     public Map<String, LocalDate> getLastCompletedDate() {
         return lastCompletedDate;
@@ -40,19 +42,19 @@ public class Routine {
 	// --251119: 특정 요일에 대해 오늘 완료되었는지 확인하는 메서드 추가
 	public boolean isCompletedForDay(String day) {
 		LocalDate lastDate = lastCompletedDate.get(day);
-		return lastDate != null && lastDate.equals(DateUtil.getToday());
+		return lastDate != null && lastDate.equals(LocalDate.now());
 	}
 	
 	// --251119: 특정 요일의 완료 날짜를 오늘로 갱신하는 메서드 추가
 	public void completeForDay(String day) {
-		lastCompletedDate.put(day, DateUtil.getToday());
+		lastCompletedDate.put(day, LocalDate.now());
 	}
     
     // ⭐ 오늘 완료했는지 확인하는 헬퍼 메서드 -- 오늘 날짜로 기록됨. / ex : 월요일 탭에서 생성한 a루틴을 체크 -> 체크된 a루틴의 객체가 오늘로 기록됨 -> 화요일 탭 이동하여 생성된 a루틴 확인 -> 
     // isCompletedToday()는 루틴의 lastCompletedDate가 오늘 날짜와 같으므로 **true**를 반환 -> 클릭 불가
     // 데이터 저장 클래스와 연동 할때 지금 이가 잘 되는지 판단할 것임
     public boolean isCompletedToday() {
-        return lastCompletedDate != null && lastCompletedDate.equals(DateUtil.getToday());
+        return lastCompletedDate != null && lastCompletedDate.equals(LocalDate.now());
     }
     
     // Getter 메서드

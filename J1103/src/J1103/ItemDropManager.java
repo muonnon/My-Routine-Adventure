@@ -15,12 +15,16 @@ public class ItemDropManager {
      */
     private static final Item[] POSSIBLE_DROPS = new Item[]{
         // 이름, 가격, 슬롯, 효과 종류, 효과 수치
-        new Item("루틴 달성 보물 상자", 100, Item.EquipSlot.NONE, Item.EffectType.EXP_BONUS, 5), // 수정(11/21) Item.EquipSlot.NONE 사용 가능하도록 Item 클래스 수정
-        new Item("행운의 동전", 5, Item.EquipSlot.NONE, Item.EffectType.NONE, 0), // 수정(11/21) Item.EquipSlot.NONE 사용 가능하도록 Item 클래스 수정
-        // [추가 아이템 3] 저가치 재화 (NONE 슬롯, 판매용)
-        new Item("빛나는 은화", 100, Item.EquipSlot.NONE, Item.EffectType.NONE, 0),
-        // [추가 아이템 4] 소형 경험치 증가 (NONE 슬롯, 소모품 가정)
-        new Item("집중의 향로", 70, Item.EquipSlot.NONE, Item.EffectType.EXP_BONUS, 2)
+    	// 1.보물상자 (기타 아이템, 경험치 보너스)
+        new Item("루틴 달성 보물 상자", 100, Item.EquipSlot.ETC, Item.EffectType.EXP_BONUS, 5),
+        // 2. 동전 (상점 판매용)
+        new Item("행운의 동전", 5, Item.EquipSlot.ETC, Item.EffectType.NONE, 0), 
+        // 3. 은화 (저가치 재화) (판매용)
+        new Item("빛나는 은화", 100, Item.EquipSlot.ETC, Item.EffectType.NONE, 0),
+        // 4. 향로 (나중에 소모품으로 발전가능)
+        new Item("집중의 향로", 70, Item.EquipSlot.ETC, Item.EffectType.EXP_BONUS, 2),
+        // 5. 목검 - 장비용
+        new Item("초심자의 목검", 50, Item.EquipSlot.WEAPON, Item.EffectType.BOSS_ATTACK, 5)
     }; // 수정(11/21) 드랍 가능한 아이템 목록 정의
 
     /**
@@ -30,10 +34,7 @@ public class ItemDropManager {
      */
     public Item dropItem(double dropRate) {
         // 드랍 확률 유효성 검사
-        if (dropRate <= 0.0) {
-            return null;
-        }
-
+        if (dropRate <= 0.0) { return null; }
         // 0.0 이상 1.0 미만의 난수 생성 
         if (random.nextDouble() < dropRate) { // 수정(11/21) 난수와 확률 비교하여 드랍 결정
             return getDroppedItem(); // 드랍 성공 시 아이템 반환

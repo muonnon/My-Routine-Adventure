@@ -1,6 +1,7 @@
 package J1103;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 
 public class Boss implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -23,7 +24,8 @@ public class Boss implements Serializable {
      * 현재 날짜(월)에 맞춰 보스 데이터를 초기화합니다.
      */
     public void spawnBossForThisMonth() {
-        this.month = DateUtil.getToday().getMonthValue(); // 현재 월 (1~12)
+        LocalDate now = LocalDate.now();
+        this.month = now.getMonthValue(); // 현재 월 (1~12)
         this.isDefeated = false;
         
         // 밸런스 설정: 100 HP
@@ -167,17 +169,4 @@ public class Boss implements Serializable {
     public boolean isDefeated() { return isDefeated; }
     public String getImagePath() { return imagePath; } // 25.11.30 김민기 : 이미지 경로
     public String getHitImagePath() { return hitImagePath; } // 25.11.30 김민기 : 공격받은 모션
-    
-    // --- Setters (데이터 로드용) ---
-    public void setCurrentHp(int currentHp) { this.currentHp = currentHp; }
-    public void setDefeated(boolean defeated) { this.isDefeated = defeated; }
-    public void setMonth(int month) { this.month = month; }
-    
-    /**
-     * 현재 시스템 시간의 월과 보스의 월이 다르면 true 반환 (매월 1일 초기화용)
-     */
-    public boolean shouldResetForNewMonth() {
-        int currentMonth = DateUtil.getToday().getMonthValue();
-        return this.month != currentMonth;
-    }
 }

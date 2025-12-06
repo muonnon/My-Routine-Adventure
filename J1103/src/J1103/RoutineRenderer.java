@@ -8,28 +8,16 @@ import java.awt.*;
 /**
  * 루틴 목록 테이블의 셀을 렌더링하는 커스텀 렌더러입니다.
  * - Column 0 (완료): 체크박스 렌더링 및 완료 시 비활성화
- * - 완료된 루틴: 배경 회색, 글자 검정
- * - 과거/미래 루틴: 글자 회색
+ * - 모든 셀: 완료된 루틴일 경우 배경/글자 색상을 회색으로 변경
  */
-public class RoutineRenderer extends JCheckBox implements TableCellRenderer {
+public class RoutineRenderer extends JCheckBox implements TableCellRenderer { // ⭐ 최상위 클래스로 변경
 
     // 다른 컬럼(이름, 태그)의 기본 렌더링을 위해 DefaultTableCellRenderer 객체를 사용합니다.
     private final DefaultTableCellRenderer defaultRenderer = new DefaultTableCellRenderer();
-    
-    // ⭐ 오늘 요일인지 여부 (외부에서 설정)
-    private boolean isToday = true;
 
     public RoutineRenderer() {
         setOpaque(true); // 배경색 설정을 위해 필수
         setHorizontalAlignment(SwingConstants.CENTER); // 체크박스 중앙 정렬
-    }
-    
-    /**
-     * 현재 탭이 오늘 요일인지 설정합니다.
-     * @param isToday 오늘 요일이면 true
-     */
-    public void setIsToday(boolean isToday) {
-        this.isToday = isToday;
     }
 
     @Override
@@ -45,10 +33,9 @@ public class RoutineRenderer extends JCheckBox implements TableCellRenderer {
         // 1. 체크박스 컬럼(Column 0) 처리
         if (column == 0 && value instanceof Boolean) {
             this.setSelected((Boolean) value);
-            // 완료된 루틴 또는 과거/미래 요일은 체크박스 비활성화
-            this.setEnabled(!isCompleted && isToday); 
-            this.setBorderPainted(false);
-            c = this;
+            this.setEnabled(!isCompleted); // 완료된 루틴은 체크박스 비활성화
+            this.setBorderPainted(false); // 체크박스 자체의 경계선을 그리지 않음
+            c = this; // JCheckBox (this) 반환
             
         } else {
             // 2. 다른 컬럼(이름, 태그, ID) 처리
@@ -57,35 +44,38 @@ public class RoutineRenderer extends JCheckBox implements TableCellRenderer {
                                                                row, column);
         }
         
-        // 3. 색상 변경 로직
-        Color bgColor;
-        Color fgColor;
-        
+        // 3. 색상 변경 로직 (완료 루틴 회색)
         if (isCompleted) {
-            // ⭐ 완료된 루틴: 배경 회색, 글자 검정
-            bgColor = isSelected ? new Color(210, 210, 210) : new Color(240, 240, 240);
-            fgColor = Color.BLACK;
-        } else if (!isToday) {
-            // ⭐ 과거/미래 루틴: 배경 기본, 글자 회색
-            bgColor = isSelected ? table.getSelectionBackground() : table.getBackground();
-            fgColor = Color.GRAY;
-        } else {
-            // 오늘의 미완료 루틴: 기본 색상
-            if (isSelected) {
-                bgColor = table.getSelectionBackground();
-                fgColor = table.getSelectionForeground();
-            } else {
-                bgColor = table.getBackground();
-                fgColor = table.getForeground();
+            // 완료된 루틴은 연한 회색 배경과 어두운 회색 전경색으로 설정
+            Color grayBackground = new Color(240, 240, 240); 
+            Color darkGrayForeground = Color.GRAY; 
+            
+            c.setBackground(isSelected ? new Color(210, 210, 210) : grayBackground);
+            c.setForeground(darkGrayForeground);
+            
+            // JCheckBox 렌더링 시 배경색도 일치시킵니다.
+            if (column == 0) {
+                 this.setBackground(isSelected ? new Color(210, 210, 210) : grayBackground);
+                 this.setForeground(darkGrayForeground);
             }
-        }
-        
-        c.setBackground(bgColor);
-        c.setForeground(fgColor);
-        
-        if (column == 0) {
-            this.setBackground(bgColor);
-            this.setForeground(fgColor);
+
+        } else {
+            // 미완료 루틴은 기본 색상
+            if (isSelected) {
+                c.setBackground(table.getSelectionBackground());
+                c.setForeground(table.getSelectionForeground());
+                if (column == 0) {
+                    this.setBackground(table.getSelectionBackground());
+                    this.setForeground(table.getSelectionForeground());
+                }
+            } else {
+                c.setBackground(table.getBackground());
+                c.setForeground(table.getForeground());
+                if (column == 0) {
+                    this.setBackground(table.getBackground());
+                    this.setForeground(table.getForeground());
+                }
+            }
         }
         
         // 4. 셀 내용 정렬
