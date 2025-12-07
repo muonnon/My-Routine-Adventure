@@ -46,74 +46,74 @@ public class Boss implements Serializable {
             case 1:
                 this.name = "희망찬 겨울 (1월)";
                 this.desc = "새해의 결심을 희망하는 겨울입니다.";
-//                this.imagePath = "images/SnowBoss.png"; // 1월 보스 이미지...
+//                this.imagePath = "images/SnowBoss.png";
 //                this.hitImagePath = "images/SnowBoss_Hit.png";
                 break;
             case 2:
                 this.name = "졸음의 초콜릿 몬스터 (2월)";
                 this.desc = "달콤한 잠으로 유혹하는 몬스터입니다.";
-//                this.imagePath = "images/boss_1.png" // 2월 보스 이미지...
+//                this.imagePath = "images/boss_1.png" 
 //                this.hitImagePath = "images/Boss2_Hit.png";
                 break;
-            // ... 3월 ~ 12월까지 case 추가 ...
+            // ... 3월 ~ 12월까지 case 추가 ...a
             case 3:
                 this.name = "몬스터 (3월)";
                 this.desc = "몬스터입니다.";
-//              this.imagePath = "images/boss_1.png" // 3월 보스 이미지....
+//              this.imagePath = "images/boss_1.png" 
 //              this.hitImagePath = "images/Boss3_Hit.png";
                 break;
             case 4:
                 this.name = "몬스터 (4월)";
                 this.desc = "몬스터입니다.";
-//              this.imagePath = "images/boss_1.png" // 3월 보스 이미지....
+//              this.imagePath = "images/boss_1.png" 
 //              this.hitImagePath = "images/Boss3_Hit.png";
                 break;
             case 5:
                 this.name = "몬스터 (5월)";
                 this.desc = "몬스터입니다.";
-//              this.imagePath = "images/boss_1.png" // 3월 보스 이미지....
+//              this.imagePath = "images/boss_1.png" 
 //              this.hitImagePath = "images/Boss3_Hit.png";
                 break;
             case 6:
                 this.name = "몬스터 (6월)";
                 this.desc = "몬스터입니다.";
-//              this.imagePath = "images/boss_1.png" // 3월 보스 이미지....
+//              this.imagePath = "images/boss_1.png" 
 //              this.hitImagePath = "images/Boss3_Hit.png";
                 break;
             case 7:
                 this.name = "몬스터 (7월)";
                 this.desc = "몬스터입니다.";
-//              this.imagePath = "images/boss_1.png" // 3월 보스 이미지....
+//              this.imagePath = "images/boss_1.png" 
 //              this.hitImagePath = "images/Boss3_Hit.png";
                 break;
             case 8:
                 this.name = "몬스터 (8월)";
                 this.desc = "몬스터입니다.";
-//              this.imagePath = "images/boss_1.png" // 3월 보스 이미지....
+//              this.imagePath = "images/boss_1.png" 
 //              this.hitImagePath = "images/Boss3_Hit.png";
                 break;
             case 9:
                 this.name = "몬스터 (9월)";
                 this.desc = "몬스터입니다.";
-//              this.imagePath = "images/boss_1.png" // 3월 보스 이미지....
+//              this.imagePath = "images/boss_1.png" // 
 //              this.hitImagePath = "images/Boss3_Hit.png";
                 break;
             case 10:
                 this.name = "몬스터 (10월)";
                 this.desc = "몬스터입니다.";
-//              this.imagePath = "images/boss_1.png" // 3월 보스 이미지....
+//              this.imagePath = "images/boss_1.png" // 10월 보스 이미지....
 //              this.hitImagePath = "images/Boss3_Hit.png";
                 break;
             case 11:
-                this.name = "몬스터 (11월)";
-                this.desc = "몬스터입니다.";
-//              this.imagePath = "images/boss_1.png" // 3월 보스 이미지....
+                this.name = "빼빼로킹 (11월)";
+                this.desc = "빼빼로를 주면 안잡아먹는답니다";
+              this.imagePath = "images/StickChocolateBoss.png"; // 11월 보스 이미지....
 //              this.hitImagePath = "images/Boss3_Hit.png";
                 break;
             case 12:
                 this.name = "나태의 눈사람 (12월)";
                 this.desc = "새해의 결심을 얼려버리려는 차가운 눈사람입니다.";
-                this.imagePath = "images/SnowBoss.png"; // 1월 보스 이미지...
+                this.imagePath = "images/SnowBoss.png"; 
                 this.hitImagePath = "images/SnowBoss_Hit.png";
         }
     }
