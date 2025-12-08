@@ -35,7 +35,7 @@
 
 ## 🎯 소개
 
-**My-Routine-Adventure (MRA)**는 일상 루틴 관리에 RPG 게임 요소를 접목한 데스크톱 애플리케이션입니다.
+My-Routine-Adventure (MRA)는 일상 루틴 관리에 RPG 게임 요소를 접목한 데스크톱 애플리케이션입니다.
 
 ### 배경
 
@@ -250,8 +250,6 @@ My-Routine-Adventure/
 ---
 
 <div align="center">
-
-**⭐ 이 프로젝트가 마음에 드셨다면 Star를 눌러주세요! ⭐**
 
 Made with ❤️ by MRA Team
 
